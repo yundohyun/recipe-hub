@@ -27,15 +27,72 @@ public class MemberRegisterServlet extends HttpServlet {
 		String password = req.getParameter("password");
 		String nickname = req.getParameter("nickname");
 
-
 		MemberDto dto = new MemberDto();
 		dto.setEmail(email);
 		dto.setPassword(password);
 		dto.setNickname(nickname);
 
+
+		boolean hasError = false;
+
+		// 입력하지 않은 여러 값을 표시
+		// 이메일 유효성, 중복 에러 -> emailError
+		// 비밀번호 길이 검사 에러 -> passwordError
+		// 닉네임 유효성 및 중복 에러 -> nicknameError
+
+		if (email == null || email.isBlank()) {
+			// 이메일만 해당되는 에러메시지
+			req.setAttribute("emailError", "이메일은 필수 입력칸입니다.");
+			hasError = true;
+		} else if (!email.matches("^[A-Za-z0-9]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+			req.setAttribute("emailError", "이메일 형식이 올바르지 않습니다.");
+			hasError = true;
+		}
+
+		if (password == null || password.length() < 8 || password.length() > 32) {
+			// 비밀번호만 해당되는 에러메시지
+			req.setAttribute("passwordError", "비밀번호는 8자 이상, 32자 이하여야 합니다.");
+			hasError = true;
+		}
+
+		if (nickname == null || nickname.isBlank()) {
+			// 닉네임만 해당되는 에러메시지
+			req.setAttribute("nicknameError", "닉네임은 필수 입력칸입니다.");
+			hasError = true;
+		}
+
+		if (hasError) {
+			// 자신이 어떤 값을 입력했는지 확인하기 위한 입력 기본값 세팅
+			req.setAttribute("emailValue", email);
+			req.setAttribute("nicknameValue", nickname);
+			req.getRequestDispatcher("register.jsp").forward(req, resp);
+			return;
+		}
+
 		MemberDao dao = new MemberDao();
 
 		try {
+
+			if (dao.checkEmailExist(email)) {
+				// 이메일만 해당되는 에러메시지 (중복검증)
+				req.setAttribute("emailError", "이미 사용 중인 이메일입니다.");
+				hasError = true;
+			}
+
+			if (dao.checkNicknameExist(nickname)) {
+				// 닉네임만 해당되는 에러메시지 (중복검증)
+				req.setAttribute("nicknameError", "이미 사용 중인 닉네임입니다.");
+				hasError = true;
+			}
+
+			if (hasError) {
+				// 자신이 어떤 값을 입력했는지 확인하기 위한 입력 기본값 세팅
+				req.setAttribute("emailValue", email);
+				req.setAttribute("nicknameValue", nickname);
+				req.getRequestDispatcher("register.jsp").forward(req, resp);
+				return;
+			}
+
 			dao.setMember(dto);
 			//회원가입 성공 시 /login Servlet으로 리다이렉트
 			resp.sendRedirect(req.getContextPath() + "/login");
