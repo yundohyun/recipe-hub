@@ -33,7 +33,7 @@
 				<a href="<c:url value="/my"/>" class="hover:bg-[#FA5F29] hover:text-white px-4 py-2 rounded-xl">
 					<span class="text-sm md:text-base">마이페이지</span>
 				</a>
-				<a href="<c:url value="/logout"/>" class="hover:bg-[#FA5F29] hover:text-white px-4 py-2 rounded-xl">
+				<a href="<c:url value="/logout.jsp"/>" class="hover:bg-[#FA5F29] hover:text-white px-4 py-2 rounded-xl">
 					<span class="text-sm md:text-base">로그아웃</span>
 				</a>
 			<% } %>
