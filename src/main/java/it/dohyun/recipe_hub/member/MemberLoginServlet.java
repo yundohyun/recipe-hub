@@ -1,12 +1,13 @@
-package it.dohyun.recipe_hub.database.member;
+package it.dohyun.recipe_hub.member;
 
+import it.dohyun.recipe_hub.database.member.MemberDao;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.*;
+import jakarta.servlet.http.*;
 import java.io.*;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.*;
-import jakarta.servlet.annotation.*;
 
 @WebServlet("/login")
 public class MemberLoginServlet extends HttpServlet {
