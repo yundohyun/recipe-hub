@@ -3,6 +3,11 @@
 	<head>
 		<title>RecipeHub - 가입하기</title>
 		<%@ include file="/component/head.jsp" %>
+		<%
+			if (session.getAttribute("loginId") != null) {
+				response.sendRedirect("/");
+			}
+		%>
 	</head>
 	<body class="min-h-screen">
 		<div class="w-full min-h-screen flex flex-col items-center bg-gray-100">
