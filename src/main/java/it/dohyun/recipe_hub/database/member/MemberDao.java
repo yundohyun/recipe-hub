@@ -107,4 +107,15 @@ public class MemberDao {
 		DatabaseUtil.close(con, ps);
 		return result;
 	}
+
+	public boolean checkNicknameExist(String nickname) throws SQLException, ClassNotFoundException {
+		Connection con = DatabaseUtil.getConnection();
+		PreparedStatement ps = con.prepareStatement("select * from member where nickname = ?");
+		ps.setString(1, nickname);
+		ResultSet rs = ps.executeQuery();
+		boolean result = rs.next();
+		DatabaseUtil.close(con, ps);
+		return result;
+	}
+
 }
