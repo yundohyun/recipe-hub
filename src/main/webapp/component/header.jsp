@@ -1,3 +1,4 @@
+<%@ page import="java.util.Objects" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <div class="flex flex-row justify-center w-full h-16 bg-white shadow-sm">
 	<div class="flex flex-row justify-between w-full xl:w-295 h-full px-4 lg:px-8 xl:px-0">
@@ -6,7 +7,11 @@
 			<span class="font-semibold text-lg">RecipeHub</span>
 		</a>
 		<div class="flex flex-row items-center gap-x-3 md:gap-x-4">
-			<% if (true) { %> <!-- TODO: 추후 로그인 여부 감지 로직 추가 예정 -->
+			<% if (
+				Objects.equals(request.getRequestURI(), "/register.jsp") ||
+				Objects.equals(request.getRequestURI(), "/login.jsp")
+			) { %>
+			<% } else if (session.getAttribute("loginId") == null) { %>
 				<!-- 로그아웃 상태 -->
 				<a href="<c:url value="/login"/>" class="bg-gray-100 hover:bg-[#FA5F29] hover:text-white px-4 py-2 shadow-sm rounded-xl">
 					<span class="text-sm md:text-base">로그인</span>
