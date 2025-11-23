@@ -69,12 +69,22 @@ public class MemberDao {
     Connection con = DatabaseUtil.getConnection();
     PreparedStatement ps =
         con.prepareStatement(
-            "update member set nickname = ?, avatar = ?, introduce = ?, email = ?, password = ?");
+            "update member set nickname = ?, avatar = ?, introduce = ?, email = ? where id = ?");
     ps.setString(1, dto.getNickname());
     ps.setString(2, dto.getAvatar());
     ps.setString(3, dto.getIntroduce());
     ps.setString(4, dto.getEmail());
-    ps.setString(5, BCrypt.hashpw(dto.getPassword(), BCrypt.gensalt()));
+    ps.setString(5, dto.getId());
+    ps.executeUpdate();
+    DatabaseUtil.close(con, ps);
+  }
+
+  public void updateMemberPassword(String id, String newPassword)
+      throws SQLException, ClassNotFoundException {
+    Connection con = DatabaseUtil.getConnection();
+    PreparedStatement ps = con.prepareStatement("update member set password = ? where id = ?");
+    ps.setString(1, BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+    ps.setString(2, id);
     ps.executeUpdate();
     DatabaseUtil.close(con, ps);
   }
