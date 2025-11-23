@@ -1,4 +1,4 @@
-package it.dohyun.recipe_hub.controller.member;
+package it.dohyun.recipe_hub.controller.auth;
 
 import it.dohyun.recipe_hub.dao.MemberDao;
 import it.dohyun.recipe_hub.model.MemberDto;
