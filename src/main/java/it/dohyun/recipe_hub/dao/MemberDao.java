@@ -7,6 +7,19 @@ import java.util.ArrayList;
 import org.mindrot.jbcrypt.BCrypt;
 
 public class MemberDao {
+  private MemberDto createDto(ResultSet rs) throws SQLException {
+    MemberDto dto = new MemberDto();
+    dto.setId(rs.getString("id"));
+    dto.setNickname(rs.getString("nickname"));
+    dto.setAvatar(rs.getString("avatar"));
+    dto.setIntroduce(rs.getString("introduce"));
+    dto.setEmail(rs.getString("email"));
+    dto.setAdmin(rs.getBoolean("admin"));
+    dto.setPassword(rs.getString("password"));
+    dto.setCreated(rs.getTimestamp("created").toLocalDateTime());
+    return dto;
+  }
+
   public MemberDto getMember(String id) throws SQLException, ClassNotFoundException {
     Connection con = DatabaseUtil.getConnection();
     PreparedStatement ps = con.prepareStatement("select * from member where id = ?");
@@ -16,15 +29,7 @@ public class MemberDao {
       DatabaseUtil.close(con, ps, rs);
       return null;
     }
-    MemberDto result = new MemberDto();
-    result.setId(rs.getString("id"));
-    result.setNickname(rs.getString("nickname"));
-    result.setAvatar(rs.getString("avatar"));
-    result.setIntroduce(rs.getString("introduce"));
-    result.setEmail(rs.getString("email"));
-    result.setAdmin(rs.getBoolean("admin"));
-    result.setPassword(rs.getString("password"));
-    result.setCreated(rs.getTimestamp("created").toLocalDateTime());
+    MemberDto result = this.createDto(rs);
     DatabaseUtil.close(con, ps, rs);
     return result;
   }
@@ -35,15 +40,7 @@ public class MemberDao {
     ResultSet rs = ps.executeQuery();
     ArrayList<MemberDto> result = new ArrayList<>();
     while (rs.next()) {
-      MemberDto dto = new MemberDto();
-      dto.setId(rs.getString("id"));
-      dto.setNickname(rs.getString("nickname"));
-      dto.setAvatar(rs.getString("avatar"));
-      dto.setIntroduce(rs.getString("introduce"));
-      dto.setEmail(rs.getString("email"));
-      dto.setAdmin(rs.getBoolean("admin"));
-      dto.setPassword(rs.getString("password"));
-      dto.setCreated(rs.getTimestamp("created").toLocalDateTime());
+      MemberDto dto = this.createDto(rs);
       result.add(dto);
     }
     DatabaseUtil.close(con, ps, rs);
@@ -69,12 +66,22 @@ public class MemberDao {
     Connection con = DatabaseUtil.getConnection();
     PreparedStatement ps =
         con.prepareStatement(
-            "update member set nickname = ?, avatar = ?, introduce = ?, email = ?, password = ?");
+            "update member set nickname = ?, avatar = ?, introduce = ?, email = ? where id = ?");
     ps.setString(1, dto.getNickname());
     ps.setString(2, dto.getAvatar());
     ps.setString(3, dto.getIntroduce());
     ps.setString(4, dto.getEmail());
-    ps.setString(5, BCrypt.hashpw(dto.getPassword(), BCrypt.gensalt()));
+    ps.setString(5, dto.getId());
+    ps.executeUpdate();
+    DatabaseUtil.close(con, ps);
+  }
+
+  public void updateMemberPassword(String id, String newPassword)
+      throws SQLException, ClassNotFoundException {
+    Connection con = DatabaseUtil.getConnection();
+    PreparedStatement ps = con.prepareStatement("update member set password = ? where id = ?");
+    ps.setString(1, BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+    ps.setString(2, id);
     ps.executeUpdate();
     DatabaseUtil.close(con, ps);
   }
