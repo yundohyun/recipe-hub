@@ -1,0 +1,115 @@
+package it.dohyun.recipe_hub.controller.auth;
+
+import it.dohyun.recipe_hub.dao.MemberDao;
+import it.dohyun.recipe_hub.model.MemberDto;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.*;
+import jakarta.servlet.http.*;
+import org.mindrot.jbcrypt.BCrypt;
+
+import java.io.*;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.Objects;
+
+// 비밀번호 관리 서블릿
+// myPassword.jsp 필요 (비밀번호 변경은 별도의 페이지에서)
+@WebServlet("/password")
+public class ChangePasswordServlet extends HttpServlet {
+	private static final Logger logger = Logger.getLogger(ChangePasswordServlet.class.getName());
+	private final MemberDao dao = new MemberDao();
+
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
+
+		HttpSession session = req.getSession(false);
+
+		// 혹시나 로그인이 되지 않았다면, 로그인 페이지로 이동
+		if (session == null || session.getAttribute("loginId") == null) {
+			resp.sendRedirect(req.getContextPath() + "/login");
+			return;
+		}
+
+		req.getRequestDispatcher("myPassword.jsp").forward(req, resp);
+
+	}
+
+	@Override
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
+		req.setCharacterEncoding("UTF-8");
+
+		HttpSession session = req.getSession(false);
+
+		// 혹시나 로그인이 되지 않았다면, 로그인 페이지로 이동
+		if (session == null || session.getAttribute("loginId") == null) {
+			resp.sendRedirect(req.getContextPath() + "/login");
+			return;
+		}
+
+		String id = (String) session.getAttribute("loginId");
+
+		String currentPassword = req.getParameter("currentPassword");
+		String newPassword = req.getParameter("newPassword");
+		String confirmPassword = req.getParameter("confirmPassword");
+
+		boolean hasError = false;
+
+		// 새로운 비밀번호 및 비밀번호 확인 유효성 검사
+		// 오류 메시지 : newPasswordError
+		if (newPassword == null || newPassword.length() < 8 || newPassword.length() > 32) {
+			req.setAttribute("newPasswordError", "비밀번호는 8자 이상, 32자 이하여야 합니다.");
+			hasError = true;
+		}
+
+		// 비밀번호 확인이 일치하지 않을 경우
+		// 오류 메시지 : confirmPasswordError
+		if (!Objects.equals(currentPassword, confirmPassword)) {
+			req.setAttribute("confirmPasswordError", "비밀번호 확인이 일치하지 않습니다.");
+			hasError = true;
+		}
+
+		if (hasError) {
+			req.getRequestDispatcher("myPassword.jsp").forward(req, resp);
+			return;
+		}
+
+		// 현재 비밀번호와 입력한 비밀번호가 일치한지 확인
+		try {
+			MemberDto dto = dao.getMember(id);
+
+			// 세션은 있으나, 모종의 이유로 회원 정보를 찾을 수 없는 경우
+			if (dto == null) {
+				session.invalidate();
+				resp.sendRedirect(req.getContextPath() + "/login");
+				return;
+			}
+
+			String hashedPassword = dto.getPassword();
+
+			// 해시된 현재 비밀번호를 가져와, 일치하는지 검사
+			// 오류 메시지 : currentPasswordError
+			if (!BCrypt.checkpw(currentPassword, hashedPassword)) {
+				req.setAttribute("currentPasswordError", "현재 비밀번호가 일치하지 않습니다.");
+				req.getRequestDispatcher("myPassword.jsp").forward(req, resp);
+				return;
+			}
+
+			// 비밀번호 변경
+			dao.updateMemberPassword(id, newPassword);
+
+			// 성공 시 마이페이지로 이동
+			resp.sendRedirect(req.getContextPath() + "/my");
+
+		} catch (SQLException | ClassNotFoundException e) {
+			// 비밀번호 변경 중 오류 발생
+			// 오류 메시지 : error
+			logger.log(Level.SEVERE, "비밀번호 변경 중 오류가 발생했습니다.", e);
+			req.setAttribute("error", "비밀번호 변경 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+			req.getRequestDispatcher("myPassword.jsp").forward(req, resp);
+		}
+
+	}
+}
