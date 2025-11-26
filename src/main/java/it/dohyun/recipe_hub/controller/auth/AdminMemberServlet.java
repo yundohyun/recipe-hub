@@ -47,7 +47,7 @@ public class AdminMemberServlet extends HttpServlet {
 
 	@Override
 	protected void doPut(HttpServletRequest req, HttpServletResponse resp)
-		throws ServletException, IOException {
+			throws ServletException, IOException {
 		req.setCharacterEncoding("UTF-8");
 
 		try {
@@ -84,8 +84,29 @@ public class AdminMemberServlet extends HttpServlet {
 			dao.updateMember(target);
 
 		} catch (SQLException | ClassNotFoundException e) {
-			logger.log(Level.SEVERE, "관리자 권한으로 수정/삭제 중 오류 발생", e);
-			req.setAttribute("error", "관리자 권한으로 수정/삭제 중 오류가 발생했습니다.");
+			logger.log(Level.SEVERE, "관리자 권한으로 수정 중 오류 발생", e);
+			req.setAttribute("error", "관리자 권한으로 수정 중 오류가 발생했습니다.");
+			req.getRequestDispatcher("admin.jsp").forward(req, resp);
+		}
+	}
+
+	@Override
+	protected void doDelete(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
+		try {
+			if (checkAdmin(req, resp) == null) return;
+
+			String memberId = req.getParameter("memberId");
+			if (memberId == null || memberId.isBlank()) {
+				resp.sendRedirect(req.getContextPath() + "/admin");
+				return;
+			}
+
+			dao.deleteMember(memberId);
+
+		} catch (SQLException | ClassNotFoundException e) {
+			logger.log(Level.SEVERE, "관리자 권한으로 삭제 중 오류 발생", e);
+			req.setAttribute("error", "관리자 권한으로 삭제 중 오류가 발생했습니다.");
 			req.getRequestDispatcher("admin.jsp").forward(req, resp);
 		}
 	}
