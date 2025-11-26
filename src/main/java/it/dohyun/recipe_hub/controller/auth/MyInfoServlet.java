@@ -62,6 +62,22 @@ public class MyInfoServlet extends HttpServlet {
 		}
 
 		String id = (String) session.getAttribute("loginId");
+		String action = req.getParameter("action");
+
+		// 회원 탈퇴 기능 (action 값이 delete라면 삭제 진행)
+		if("delete".equals(action)) {
+			try {
+				dao.deleteMember(id);
+				session.invalidate();
+				resp.sendRedirect(req.getContextPath() + "/login");
+				return;
+			} catch (SQLException | ClassNotFoundException e) {
+				logger.log(Level.SEVERE, "회원 탈퇴 중 에러 발생", e);
+				req.setAttribute("error", "회원 탈퇴 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+				req.getRequestDispatcher("my.jsp").forward(req, resp);
+				return;
+			}
+		}
 
 		String email = req.getParameter("email");
 		String nickname = req.getParameter("nickname");
