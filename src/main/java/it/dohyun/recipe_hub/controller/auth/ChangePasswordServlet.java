@@ -21,22 +21,6 @@ public class ChangePasswordServlet extends HttpServlet {
 	private final MemberDao dao = new MemberDao();
 
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-			throws ServletException, IOException {
-
-		HttpSession session = req.getSession(false);
-
-		// 혹시나 로그인이 되지 않았다면, 로그인 페이지로 이동
-		if (session == null || session.getAttribute("loginId") == null) {
-			resp.sendRedirect(req.getContextPath() + "/login");
-			return;
-		}
-
-		req.getRequestDispatcher("myPassword.jsp").forward(req, resp);
-
-	}
-
-	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 		req.setCharacterEncoding("UTF-8");
