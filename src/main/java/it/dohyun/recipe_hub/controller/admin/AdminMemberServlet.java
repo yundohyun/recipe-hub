@@ -2,12 +2,14 @@ package it.dohyun.recipe_hub.controller.admin;
 
 import it.dohyun.recipe_hub.dao.MemberDao;
 import it.dohyun.recipe_hub.model.MemberDto;
+import it.dohyun.recipe_hub.util.URLEncodeParser;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.*;
 import jakarta.servlet.http.*;
 import java.io.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -83,65 +85,85 @@ public class AdminMemberServlet extends HttpServlet {
   protected void doPut(HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException {
     req.setCharacterEncoding("UTF-8");
+    resp.setContentType("application/json; charset=UTF-8");
+
+    Map<String, String> body = URLEncodeParser.parseUrlEncodedBody(req);
+
+    PrintWriter out = resp.getWriter();
 
     try {
-      if (checkAdmin(req, resp) == null) return;
+      if (checkAdmin(req, resp) == null) {
+        resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        out.write("{\"error\": \"관리자 권한 없음\"}");
+        return;
+      }
 
-      String memberId = req.getParameter("memberId");
+      String memberId = body.get("memberId");
       if (memberId == null || memberId.isBlank()) {
-        resp.sendRedirect("/admin/member");
+        resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        out.write("{\"error\": \"memberId가 필요합니다\"}");
         return;
       }
 
       MemberDto target = dao.getMember(memberId);
 
       if (target == null) {
-        resp.sendRedirect("/admin/member");
+        resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        out.write("{\"error\": \"해당 회원이 존재하지 않습니다\"}");
         return;
       }
 
-      String nickname = req.getParameter("nickname");
-      String avatar = req.getParameter("avatar");
-      String introduction = req.getParameter("introduction");
+      String nickname = body.get("nickname");
+      String avatar = body.get("avatar");
+      String introduction = body.get("introduction");
 
-      if (nickname != null && !nickname.isBlank()) {
-        target.setNickname(nickname);
-      }
-      if (avatar != null) {
-        target.setAvatar(avatar);
-      }
-      if (introduction != null) {
-        target.setIntroduce(introduction);
-      }
+      if (nickname != null && !nickname.isBlank()) target.setNickname(nickname);
+      if (avatar != null) target.setAvatar(avatar);
+      if (introduction != null) target.setIntroduce(introduction);
 
-      // 회원 정보 업데이트
       dao.updateMember(target);
+
+      resp.setStatus(HttpServletResponse.SC_OK);
+      out.write("{\"message\": \"회원 정보가 수정되었습니다\"}");
 
     } catch (SQLException | ClassNotFoundException e) {
       logger.log(Level.SEVERE, "관리자 권한으로 수정 중 오류 발생", e);
-      req.setAttribute("error", "관리자 권한으로 수정 중 오류가 발생했습니다.");
-      req.getRequestDispatcher("member.jsp").forward(req, resp);
+      resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      out.write("{\"error\": \"수정 중 서버 오류 발생\"}");
     }
   }
 
   @Override
   protected void doDelete(HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException {
-    try {
-      if (checkAdmin(req, resp) == null) return;
+    resp.setContentType("application/json; charset=UTF-8");
+    PrintWriter out = resp.getWriter();
 
-      String memberId = req.getParameter("memberId");
+    Map<String, String> body = URLEncodeParser.parseUrlEncodedBody(req);
+
+    try {
+      if (checkAdmin(req, resp) == null) {
+        resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        out.write("{\"error\": \"관리자 권한 없음\"}");
+        return;
+      }
+
+      String memberId = body.get("memberId");
       if (memberId == null || memberId.isBlank()) {
-        resp.sendRedirect("/admin/member");
+        resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        out.write("{\"error\": \"memberId가 필요합니다\"}");
         return;
       }
 
       dao.deleteMember(memberId);
 
+      resp.setStatus(HttpServletResponse.SC_OK);
+      out.write("{\"message\": \"회원이 삭제되었습니다\"}");
+
     } catch (SQLException | ClassNotFoundException e) {
       logger.log(Level.SEVERE, "관리자 권한으로 삭제 중 오류 발생", e);
-      req.setAttribute("error", "관리자 권한으로 삭제 중 오류가 발생했습니다.");
-      req.getRequestDispatcher("member.jsp").forward(req, resp);
+      resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      out.write("{\"error\": \"삭제 중 서버 오류 발생\"}");
     }
   }
 }
