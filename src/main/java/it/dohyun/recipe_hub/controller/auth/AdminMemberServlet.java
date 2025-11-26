@@ -7,7 +7,6 @@ import jakarta.servlet.annotation.*;
 import jakarta.servlet.http.*;
 import java.io.*;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,6 +42,51 @@ public class AdminMemberServlet extends HttpServlet {
 			req.setAttribute("error", "관리자 여부 확인 중 오류가 발생했습니다.");
 			req.getRequestDispatcher("/admin").forward(req, resp);
 			return null;
+		}
+	}
+
+	@Override
+	protected void doPut(HttpServletRequest req, HttpServletResponse resp)
+		throws ServletException, IOException {
+		req.setCharacterEncoding("UTF-8");
+
+		try {
+			if(checkAdmin(req, resp) == null) return;
+
+			String memberId = req.getParameter("memberId");
+			if (memberId == null || memberId.isBlank()) {
+				resp.sendRedirect(req.getContextPath() + "/admin");
+				return;
+			}
+
+			MemberDto target = dao.getMember(memberId);
+
+			if (target == null) {
+				resp.sendRedirect(req.getContextPath() + "/admin");
+				return;
+			}
+
+			String nickname = req.getParameter("nickname");
+			String avatar = req.getParameter("avatar");
+			String introduction = req.getParameter("introduction");
+
+			if (nickname != null && !nickname.isBlank()) {
+				target.setNickname(nickname);
+			}
+			if  (avatar != null) {
+				target.setAvatar(avatar);
+			}
+			if (introduction != null) {
+				target.setIntroduce(introduction);
+			}
+
+			// 회원 정보 업데이트
+			dao.updateMember(target);
+
+		} catch (SQLException | ClassNotFoundException e) {
+			logger.log(Level.SEVERE, "관리자 권한으로 수정/삭제 중 오류 발생", e);
+			req.setAttribute("error", "관리자 권한으로 수정/삭제 중 오류가 발생했습니다.");
+			req.getRequestDispatcher("admin.jsp").forward(req, resp);
 		}
 	}
 }
