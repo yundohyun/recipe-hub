@@ -7,6 +7,7 @@ import jakarta.servlet.annotation.*;
 import jakarta.servlet.http.*;
 import java.io.*;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,8 +41,41 @@ public class AdminMemberServlet extends HttpServlet {
     } catch (SQLException | ClassNotFoundException e) {
       logger.log(Level.SEVERE, "관리자 여부 확인 중 오류 발생", e);
       req.setAttribute("error", "관리자 여부 확인 중 오류가 발생했습니다.");
-      req.getRequestDispatcher("/admin").forward(req, resp);
+      req.getRequestDispatcher("/admin/member").forward(req, resp);
       return null;
+    }
+  }
+
+  @Override
+  protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+      throws ServletException, IOException {
+    HttpSession session = req.getSession(false);
+
+    if (session == null || session.getAttribute("loginId") == null) {
+      resp.sendRedirect(req.getContextPath() + "/login");
+      return;
+    }
+
+    String loginId = (String) session.getAttribute("loginId");
+
+    try {
+      // 관리자 여부 확인
+      MemberDto me = dao.getMember(loginId);
+      if (me == null || !me.isAdmin()) {
+        resp.sendRedirect(req.getContextPath() + "/my");
+        return;
+      }
+
+      // 회원 목록 조회
+      ArrayList<MemberDto> members = dao.getMembers();
+      req.setAttribute("members", members);
+      // 조회된 내용은 members 변수에 담은 후, 포워드
+      req.getRequestDispatcher("admin/member.jsp").forward(req, resp);
+
+    } catch (Exception e) {
+      logger.log(Level.SEVERE, "관리자 페이지 조회 중 오류가 발생했습니다.", e);
+      req.setAttribute("error", "관리자 페이지 조회 중 오류가 발생했습니다.");
+      req.getRequestDispatcher("admin/member.jsp").forward(req, resp);
     }
   }
 
@@ -55,14 +89,14 @@ public class AdminMemberServlet extends HttpServlet {
 
       String memberId = req.getParameter("memberId");
       if (memberId == null || memberId.isBlank()) {
-        resp.sendRedirect(req.getContextPath() + "/admin");
+        resp.sendRedirect(req.getContextPath() + "/admin/member");
         return;
       }
 
       MemberDto target = dao.getMember(memberId);
 
       if (target == null) {
-        resp.sendRedirect(req.getContextPath() + "/admin");
+        resp.sendRedirect(req.getContextPath() + "/admin/member");
         return;
       }
 
@@ -86,7 +120,7 @@ public class AdminMemberServlet extends HttpServlet {
     } catch (SQLException | ClassNotFoundException e) {
       logger.log(Level.SEVERE, "관리자 권한으로 수정 중 오류 발생", e);
       req.setAttribute("error", "관리자 권한으로 수정 중 오류가 발생했습니다.");
-      req.getRequestDispatcher("admin.jsp").forward(req, resp);
+      req.getRequestDispatcher("admin/member.jsp").forward(req, resp);
     }
   }
 
@@ -98,7 +132,7 @@ public class AdminMemberServlet extends HttpServlet {
 
       String memberId = req.getParameter("memberId");
       if (memberId == null || memberId.isBlank()) {
-        resp.sendRedirect(req.getContextPath() + "/admin");
+        resp.sendRedirect(req.getContextPath() + "/admin/member");
         return;
       }
 
@@ -107,7 +141,7 @@ public class AdminMemberServlet extends HttpServlet {
     } catch (SQLException | ClassNotFoundException e) {
       logger.log(Level.SEVERE, "관리자 권한으로 삭제 중 오류 발생", e);
       req.setAttribute("error", "관리자 권한으로 삭제 중 오류가 발생했습니다.");
-      req.getRequestDispatcher("admin.jsp").forward(req, resp);
+      req.getRequestDispatcher("admin/member.jsp").forward(req, resp);
     }
   }
 }
