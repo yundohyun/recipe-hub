@@ -11,7 +11,6 @@ import java.io.*;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.Objects;
 
 // 비밀번호 관리 서블릿
 // myPassword.jsp 필요 (비밀번호 변경은 별도의 페이지에서)
