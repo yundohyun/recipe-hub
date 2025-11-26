@@ -49,35 +49,17 @@ public class MyInfoServlet extends HttpServlet {
 	}
 
 	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+	protected void doPut(HttpServletRequest req, HttpServletResponse resp)
 		throws ServletException, IOException {
 		req.setCharacterEncoding("utf-8");
 
 		HttpSession session = req.getSession(false);
-
-		// 혹시나 로그인이 되지 않았다면, 로그인 페이지로 이동
 		if (session == null || session.getAttribute("loginId") == null) {
 			resp.sendRedirect(req.getContextPath() + "/login");
 			return;
 		}
 
 		String id = (String) session.getAttribute("loginId");
-		String action = req.getParameter("action");
-
-		// 회원 탈퇴 기능 (action 값이 delete라면 삭제 진행)
-		if("delete".equals(action)) {
-			try {
-				dao.deleteMember(id);
-				session.invalidate();
-				resp.sendRedirect(req.getContextPath() + "/login");
-				return;
-			} catch (SQLException | ClassNotFoundException e) {
-				logger.log(Level.SEVERE, "회원 탈퇴 중 에러 발생", e);
-				req.setAttribute("error", "회원 탈퇴 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-				req.getRequestDispatcher("my.jsp").forward(req, resp);
-				return;
-			}
-		}
 
 		String email = req.getParameter("email");
 		String nickname = req.getParameter("nickname");
@@ -122,7 +104,6 @@ public class MyInfoServlet extends HttpServlet {
 			return;
 		}
 
-		// DB를 통해 변경 값이 중복인지 판단 여부와, 문제 없으면 업데이트 하는 코드
 		try {
 			MemberDto dto = dao.getMember(id);
 			if (dto == null) {
@@ -168,6 +149,32 @@ public class MyInfoServlet extends HttpServlet {
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, "회원 정보 수정 중 에러 발생", e);
 			req.setAttribute("error", "회원 정보 수정 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+			req.getRequestDispatcher("my.jsp").forward(req, resp);
+		}
+	}
+
+
+	@Override
+	protected void doDelete(HttpServletRequest req, HttpServletResponse resp)
+		throws ServletException, IOException {
+		HttpSession session = req.getSession(false);
+
+		// 혹시나 로그인이 되지 않았다면, 로그인 페이지로 이동
+		if (session == null || session.getAttribute("loginId") == null) {
+			resp.sendRedirect(req.getContextPath() + "/login");
+			return;
+		}
+
+		String id = (String) session.getAttribute("loginId");
+
+		try {
+			dao.deleteMember(id);
+			session.invalidate();
+			resp.sendRedirect(req.getContextPath() + "/login");
+
+		} catch (SQLException | ClassNotFoundException e) {
+			logger.log(Level.SEVERE, "회원 탈퇴 중 에러 발생", e);
+			req.setAttribute("error", "회원 탈퇴 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
 			req.getRequestDispatcher("my.jsp").forward(req, resp);
 		}
 	}
