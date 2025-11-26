@@ -37,7 +37,6 @@ public class ChangePasswordServlet extends HttpServlet {
 
 		String currentPassword = req.getParameter("currentPassword");
 		String newPassword = req.getParameter("newPassword");
-		String confirmPassword = req.getParameter("confirmPassword");
 
 		boolean hasError = false;
 
@@ -45,13 +44,6 @@ public class ChangePasswordServlet extends HttpServlet {
 		// 오류 메시지 : newPasswordError
 		if (newPassword == null || newPassword.length() < 8 || newPassword.length() > 32) {
 			req.setAttribute("newPasswordError", "비밀번호는 8자 이상, 32자 이하여야 합니다.");
-			hasError = true;
-		}
-
-		// 비밀번호 확인이 일치하지 않을 경우
-		// 오류 메시지 : confirmPasswordError
-		if (!Objects.equals(currentPassword, confirmPassword)) {
-			req.setAttribute("confirmPasswordError", "비밀번호 확인이 일치하지 않습니다.");
 			hasError = true;
 		}
 
