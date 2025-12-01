@@ -9,6 +9,7 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import java.io.*;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,6 +19,42 @@ import java.util.logging.Logger;
 public class ChangePasswordServlet extends HttpServlet {
 	private static final Logger logger = Logger.getLogger(ChangePasswordServlet.class.getName());
 	private final MemberDao dao = new MemberDao();
+
+	// 결과를 Json으로 만듬
+	private void writeJson(HttpServletResponse resp, int status, Map<String , Object> body)
+		throws IOException {
+		resp.setStatus(status);
+		resp.setContentType("application/json; charset=UTF-8");
+
+		StringBuilder json = new StringBuilder();
+		json.append("{");
+
+		boolean first = true;
+		for (Map.Entry<String, Object> entry : body.entrySet()) {
+			if (!first) json.append(",");
+			first = false;
+
+			json.append("\"").append(entry.getKey()).append("\":");
+
+			Object value = entry.getValue();
+
+			// 값이 없을 경우
+			if (value == null) {
+				json.append("null");
+			} else if	(value instanceof Number || value instanceof Boolean) {
+				json.append(value);
+			} else {
+				String s = value.toString().replace("\"", "\\\"");
+				json.append("\"").append(s).append("\"");
+			}
+		}
+
+		json.append("}");
+
+		try (PrintWriter out = resp.getWriter()) {
+			out.print(json);
+		}
+	}
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
