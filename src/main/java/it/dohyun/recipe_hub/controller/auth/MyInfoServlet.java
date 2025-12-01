@@ -87,57 +87,63 @@ public class MyInfoServlet extends HttpServlet {
 
 	@Override
 	protected void doPut(HttpServletRequest req, HttpServletResponse resp)
-		throws ServletException, IOException {
-		req.setCharacterEncoding("utf-8");
+			throws ServletException, IOException {
 
 		HttpSession session = req.getSession(false);
+
 		if (session == null || session.getAttribute("loginId") == null) {
-			resp.sendRedirect(req.getContextPath() + "/login");
+			Map<String, Object> body = new HashMap<>();
+			body.put("success", false);
+			body.put("message", "로그인이 필요합니다.");
+			writeJson(resp, HttpServletResponse.SC_BAD_REQUEST, body);
 			return;
 		}
 
 		String id = (String) session.getAttribute("loginId");
 
-		String email = req.getParameter("email");
-		String nickname = req.getParameter("nickname");
-		String avatar = req.getParameter("avatar");
-		String introduce = req.getParameter("introduce");
+		//Map 클래스 params
+		Map<String, String> params;
+		try {
+			params = URLEncodeParser.parseUrlEncodedBody(req);
 
-		boolean hasError = false;
+		} catch (IOException e) {
+			logger.log(Level.SEVERE, "요청 Body 파싱 중 오류 발생", e);
+			Map<String, Object> body = new HashMap<>();
+			body.put("success", false);
+			body.put("message", "요청 데이터를 해석하는 중 오류가 발생했습니다.");
+			writeJson(resp, HttpServletResponse.SC_BAD_REQUEST, body);
+			return;
+
+		}
+
+		String email = params.get("email");
+		String nickname = params.get("nickname");
+		String avatar = params.get("avatar");
+		String introduce = params.get("introduce");
+
+		// 에러 메시지를 담을 Map 클래스 변수
+		Map<String, Object> errors = new HashMap<>();
 
 		// 이메일 변경 시 유효성 검사
 		if (email == null || email.isBlank()) {
 			// 이메일만 해당되는 에러메시지
-			req.setAttribute("emailError", "이메일은 필수 입력칸입니다.");
-			hasError = true;
+			errors.put("emailError", "이메일은 필수 입력칸입니다.");
 		} else if (!email.matches("^[A-Za-z0-9]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
-			req.setAttribute("emailError", "이메일 형식이 올바르지 않습니다.");
-			hasError = true;
+			errors.put("emailError", "이메일 형식이 올바르지 않습니다.");
 		}
 
 		// 닉네임 변경 시 유효성 검사
 		if (nickname == null || nickname.isBlank()) {
 			// 닉네임만 해당되는 에러메시지
-			req.setAttribute("nicknameError", "닉네임은 필수 입력칸입니다.");
-			hasError = true;
+			errors.put("nicknameError", "닉네임은 필수 입력칸입니다.");
 		}
 
-		// 에러 있을 시, 기존에 입력했던 값은 다시 표시할 수 있게 속성에 저장
-		if (hasError) {
-			try {
-				MemberDto dto = dao.getMember(id);
-				if (dto != null) {
-					// 사용자가 입력한 값으로 덮어쓰기
-					dto.setEmail(email);
-					dto.setNickname(nickname);
-					dto.setAvatar(avatar);
-					dto.setIntroduce(introduce);
-					req.setAttribute("member", dto);
-				}
-			} catch (SQLException | ClassNotFoundException e) {
-				logger.log(Level.SEVERE, "회원 정보를 불러오는 도중 에러 발생", e);
-			}
-			req.getRequestDispatcher("my.jsp").forward(req, resp);
+		// errors 변수가 비어있지 않다면, 바로 JSON으로 에러 메시지 반환
+		if (!errors.isEmpty()) {
+			Map<String, Object> body = new HashMap<>();
+			body.put("success", false);
+			body.put("errors", errors);
+			writeJson(resp, HttpServletResponse.SC_BAD_REQUEST, body);
 			return;
 		}
 
@@ -145,32 +151,30 @@ public class MyInfoServlet extends HttpServlet {
 			MemberDto dto = dao.getMember(id);
 			if (dto == null) {
 				// 세션은 있으나, 모종의 이유로 회원 정보를 찾을 수 없는 경우
+				// 바로 JSON으로 에러 메시지 반환
 				session.invalidate();
-				resp.sendRedirect(req.getContextPath() + "/login");
+				Map<String, Object> body = new HashMap<>();
+				body.put("success", false);
+				body.put("message", "회원 정보를 찾을 수 없습니다. 다시 로그인해주세요.");
+				writeJson(resp, HttpServletResponse.SC_BAD_REQUEST, body);
 				return;
 			}
 
 			// 사용자가 입력 한 이메일이 본인의 원래 이메일과 다르면서, 고유한 값이 아닐 시 에러
 			if (dao.checkEmailExist(email) && !email.equals(dto.getEmail())) {
-				req.setAttribute("emailError", "이미 사용 중인 이메일입니다.");
-				hasError = true;
+				errors.put("emailError", "이미 사용 중인 이메일입니다.");
 			}
 
 			// 사용자가 입력 한 닉네임이 본인의 원래 닉네임과 다르면서, 고유한 값이 아닐 시 에러
 			if (dao.checkNicknameExist(nickname) && !nickname.equals(dto.getNickname())) {
-				req.setAttribute("nicknameError", "이미 사용 중인 닉네임입니다.");
-				hasError = true;
+				errors.put("nicknameError", "이미 사용 중인 닉네임입니다.");
 			}
 
-			if (hasError) {
-				dto.setEmail(email);
-				dto.setNickname(nickname);
-				dto.setAvatar(avatar);
-				dto.setIntroduce(introduce);
-
-				// hasError 존재 시, 현재 폼의 값을 req 영역에 저장 후, 마이페이지 다시 불러옴
-				req.setAttribute("member", dto);
-				req.getRequestDispatcher("my.jsp").forward(req, resp);
+			if (!errors.isEmpty()) {
+				Map<String, Object> body = new HashMap<>();
+				body.put("success", false);
+				body.put("errors", errors);
+				writeJson(resp, HttpServletResponse.SC_BAD_REQUEST, body); // 409 충돌
 				return;
 			}
 
@@ -181,12 +185,17 @@ public class MyInfoServlet extends HttpServlet {
 
 			dao.updateMember(dto);
 
-			resp.sendRedirect(req.getContextPath() + "/my");
+			Map<String, Object> body = new HashMap<>();
+			body.put("success", true);
+			body.put("message", "회원 정보가 성공적으로 수정되었습니다.");
+			writeJson(resp, HttpServletResponse.SC_OK, body);
 
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, "회원 정보 수정 중 에러 발생", e);
-			req.setAttribute("error", "회원 정보 수정 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-			req.getRequestDispatcher("my.jsp").forward(req, resp);
+			Map<String, Object> body = new HashMap<>();
+			body.put("success", false);
+			body.put("message", "회원 정보 수정 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+			writeJson(resp, HttpServletResponse.SC_BAD_REQUEST, body);
 		}
 	}
 
