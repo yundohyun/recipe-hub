@@ -18,7 +18,7 @@ ext {
 sourceCompatibility = '17'
 targetCompatibility = '17'
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
 	options.encoding = 'UTF-8'
 }
 
@@ -27,6 +27,8 @@ dependencies {
 
 	implementation 'jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api:2.0.0'
 	implementation 'org.glassfish.web:jakarta.servlet.jsp.jstl:2.0.0'
+
+	implementation 'org.json:json:20231013'
 
 	implementation 'com.mysql:mysql-connector-j:9.5.0'
 
