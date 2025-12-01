@@ -46,7 +46,7 @@ public class MemberLoginServlet extends HttpServlet {
       session.setAttribute("loginId", memberId);
 
       // Session 영역의 loginId 값을 통해, 로그인 비로그인 구분
-      resp.sendRedirect(req.getContextPath() + "/index.jsp");
+      resp.sendRedirect(req.getContextPath() + "/");
     } else {
       req.setAttribute("error", "이메일(아이디) 또는 비밀번호가 올바르지 않습니다.");
       // 에러 발생 시 로그인 페이지로 포워드 (추후 경로 설정)
