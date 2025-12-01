@@ -87,7 +87,7 @@ public class MyInfoServlet extends HttpServlet {
 
 	@Override
 	protected void doPut(HttpServletRequest req, HttpServletResponse resp)
-			throws ServletException, IOException {
+			throws IOException {
 
 		HttpSession session = req.getSession(false);
 
@@ -95,7 +95,7 @@ public class MyInfoServlet extends HttpServlet {
 			Map<String, Object> body = new HashMap<>();
 			body.put("success", false);
 			body.put("message", "로그인이 필요합니다.");
-			writeJson(resp, HttpServletResponse.SC_BAD_REQUEST, body);
+			writeJson(resp, HttpServletResponse.SC_UNAUTHORIZED, body);
 			return;
 		}
 
@@ -156,7 +156,7 @@ public class MyInfoServlet extends HttpServlet {
 				Map<String, Object> body = new HashMap<>();
 				body.put("success", false);
 				body.put("message", "회원 정보를 찾을 수 없습니다. 다시 로그인해주세요.");
-				writeJson(resp, HttpServletResponse.SC_BAD_REQUEST, body);
+				writeJson(resp, HttpServletResponse.SC_UNAUTHORIZED, body);
 				return;
 			}
 
@@ -174,10 +174,11 @@ public class MyInfoServlet extends HttpServlet {
 				Map<String, Object> body = new HashMap<>();
 				body.put("success", false);
 				body.put("errors", errors);
-				writeJson(resp, HttpServletResponse.SC_BAD_REQUEST, body); // 409 충돌
+				writeJson(resp, HttpServletResponse.SC_CONFLICT, body); // 409
 				return;
 			}
 
+			// 값 업데이트
 			dto.setEmail(email);
 			dto.setNickname(nickname);
 			dto.setAvatar(avatar);
@@ -195,19 +196,23 @@ public class MyInfoServlet extends HttpServlet {
 			Map<String, Object> body = new HashMap<>();
 			body.put("success", false);
 			body.put("message", "회원 정보 수정 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-			writeJson(resp, HttpServletResponse.SC_BAD_REQUEST, body);
+			writeJson(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, body);
 		}
 	}
 
 
 	@Override
 	protected void doDelete(HttpServletRequest req, HttpServletResponse resp)
-		throws ServletException, IOException {
+			throws IOException {
+
 		HttpSession session = req.getSession(false);
 
 		// 혹시나 로그인이 되지 않았다면, 로그인 페이지로 이동
 		if (session == null || session.getAttribute("loginId") == null) {
-			resp.sendRedirect(req.getContextPath() + "/login");
+			Map<String, Object> body = new HashMap<>();
+			body.put("success", false);
+			body.put("message", "로그인이 필요합니다.");
+			writeJson(resp, HttpServletResponse.SC_UNAUTHORIZED, body);
 			return;
 		}
 
@@ -216,12 +221,18 @@ public class MyInfoServlet extends HttpServlet {
 		try {
 			dao.deleteMember(id);
 			session.invalidate();
-			resp.sendRedirect(req.getContextPath() + "/login");
+
+			Map<String, Object> body = new HashMap<>();
+			body.put("success", true);
+			body.put("message", "회원 탈퇴가 완료되었습니다.");
+			writeJson(resp, HttpServletResponse.SC_OK, body);
 
 		} catch (SQLException | ClassNotFoundException e) {
 			logger.log(Level.SEVERE, "회원 탈퇴 중 에러 발생", e);
-			req.setAttribute("error", "회원 탈퇴 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-			req.getRequestDispatcher("my.jsp").forward(req, resp);
+			Map<String, Object> body = new HashMap<>();
+			body.put("success", false);
+			body.put("message", "회원 탈퇴 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+			writeJson(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, body);
 		}
 	}
 }
