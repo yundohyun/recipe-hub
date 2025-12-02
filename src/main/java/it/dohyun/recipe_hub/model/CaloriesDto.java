@@ -8,9 +8,9 @@ public class CaloriesDto {
   private String name;
   private Integer serve;
   private Integer calories;
-  private Integer protein;
-  private Integer fat;
-  private Integer carbohydrates;
+  private Double protein;
+  private Double fat;
+  private Double carbohydrates;
   private LocalDateTime created;
 
   public String getName() {
@@ -45,27 +45,27 @@ public class CaloriesDto {
     this.calories = calories;
   }
 
-  public Integer getProtein() {
+  public Double getProtein() {
     return protein;
   }
 
-  public void setProtein(Integer protein) {
+  public void setProtein(Double protein) {
     this.protein = protein;
   }
 
-  public Integer getFat() {
+  public Double getFat() {
     return fat;
   }
 
-  public void setFat(Integer fat) {
+  public void setFat(Double fat) {
     this.fat = fat;
   }
 
-  public Integer getCarbohydrates() {
+  public Double getCarbohydrates() {
     return carbohydrates;
   }
 
-  public void setCarbohydrates(Integer carbohydrates) {
+  public void setCarbohydrates(Double carbohydrates) {
     this.carbohydrates = carbohydrates;
   }
 

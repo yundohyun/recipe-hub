@@ -14,9 +14,9 @@ public class CaloriesDao {
     dto.setName(rs.getString("name"));
     dto.setServe(rs.getInt("serve"));
     dto.setCalories(rs.getInt("calories"));
-    dto.setProtein(rs.getInt("protein"));
-    dto.setFat(rs.getInt("fat"));
-    dto.setCarbohydrates(rs.getInt("carbohydrates"));
+    dto.setProtein(rs.getDouble("protein"));
+    dto.setFat(rs.getDouble("fat"));
+    dto.setCarbohydrates(rs.getDouble("carbohydrates"));
     dto.setCreated(rs.getTimestamp("created").toLocalDateTime());
     return dto;
   }
@@ -56,9 +56,9 @@ public class CaloriesDao {
     st.setString(1, dto.getName());
     st.setInt(2, dto.getServe());
     st.setInt(3, dto.getCalories());
-    st.setInt(4, dto.getProtein());
-    st.setInt(5, dto.getFat());
-    st.setInt(6, dto.getCarbohydrates());
+    st.setDouble(4, dto.getProtein());
+    st.setDouble(5, dto.getFat());
+    st.setDouble(6, dto.getCarbohydrates());
     st.executeUpdate();
     DatabaseUtil.close(con, st);
   }
