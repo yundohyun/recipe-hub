@@ -1,5 +1,7 @@
 package it.dohyun.recipe_hub.model;
 
+import org.json.JSONObject;
+
 public class PostImageDto {
   private String postId;
   private String imageId;
@@ -18,5 +20,12 @@ public class PostImageDto {
 
   public void setImageId(String imageId) {
     this.imageId = imageId;
+  }
+
+  public JSONObject toJSON() {
+    JSONObject json = new JSONObject();
+    json.put("postId", postId);
+    json.put("imageId", imageId);
+    return json;
   }
 }

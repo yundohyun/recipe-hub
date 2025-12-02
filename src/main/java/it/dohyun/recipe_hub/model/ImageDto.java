@@ -1,6 +1,7 @@
 package it.dohyun.recipe_hub.model;
 
 import java.time.LocalDateTime;
+import org.json.JSONObject;
 
 public class ImageDto {
   private String id;
@@ -29,5 +30,13 @@ public class ImageDto {
 
   public void setCreated(LocalDateTime created) {
     this.created = created;
+  }
+
+  public JSONObject toJSON() {
+    JSONObject json = new JSONObject();
+    json.put("id", id);
+    json.put("image", image);
+    json.put("created", created);
+    return json;
   }
 }

@@ -1,6 +1,7 @@
 package it.dohyun.recipe_hub.model;
 
 import java.time.LocalDateTime;
+import org.json.JSONObject;
 
 public class PostDto {
   private String id;
@@ -66,4 +67,16 @@ public class PostDto {
   public void setUpdated(LocalDateTime updated) {
     this.updated = updated;
   }
+	
+	public JSONObject toJSON() {
+		JSONObject json = new JSONObject();
+		json.put("id", id);
+		json.put("memberId", memberId);
+		json.put("title", title);
+		json.put("content", content);
+		json.put("viewCount", viewCount);
+		json.put("created", created);
+		json.put("updated", updated);
+		return json;
+	}
 }

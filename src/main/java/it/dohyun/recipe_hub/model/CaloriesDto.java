@@ -1,6 +1,7 @@
 package it.dohyun.recipe_hub.model;
 
 import java.time.LocalDateTime;
+import org.json.JSONObject;
 
 public class CaloriesDto {
   private String id;
@@ -74,5 +75,18 @@ public class CaloriesDto {
 
   public void setCreated(LocalDateTime created) {
     this.created = created;
+  }
+
+  public JSONObject toJSON() {
+    JSONObject json = new JSONObject();
+    json.put("id", id);
+    json.put("name", name);
+    json.put("serve", serve);
+    json.put("calories", calories);
+    json.put("protein", protein);
+    json.put("fat", fat);
+    json.put("carbohydrates", carbohydrates);
+    json.put("created", created);
+    return json;
   }
 }
