@@ -11,8 +11,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @WebServlet("/register")
-public class MemberRegisterServlet extends HttpServlet {
-  private static final Logger logger = Logger.getLogger(MemberRegisterServlet.class.getName());
+public class RegisterServlet extends HttpServlet {
+  private static final Logger logger = Logger.getLogger(RegisterServlet.class.getName());
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp)

@@ -10,8 +10,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @WebServlet("/login")
-public class MemberLoginServlet extends HttpServlet {
-  private static final Logger logger = Logger.getLogger(MemberLoginServlet.class.getName());
+public class LoginServlet extends HttpServlet {
+  private static final Logger logger = Logger.getLogger(LoginServlet.class.getName());
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp)
