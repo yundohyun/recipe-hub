@@ -23,11 +23,11 @@ public class CaloriesDao {
 
   public String buildFindQuery(StringBuilder sql, FindOption option) {
     if (!option.toString().contains("WHERE")) sql.append(" WHERE 1=1");
-    if (option.getFrom() != null) sql.append(" AND created_at >= ?");
-    if (option.getTo() != null) sql.append(" AND created_at <= ?");
+    if (option.getFrom() != null) sql.append(" AND created >= ?");
+    if (option.getTo() != null) sql.append(" AND created <= ?");
 
     if (option.getSort() != null) {
-      sql.append(" ORDER BY created_at ");
+      sql.append(" ORDER BY created ");
       sql.append(option.getSort() == SortEnum.ASC ? "ASC" : "DESC");
     }
 
