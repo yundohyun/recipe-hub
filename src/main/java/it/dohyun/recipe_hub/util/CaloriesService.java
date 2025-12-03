@@ -77,7 +77,7 @@ public class CaloriesService {
 		JSONObject root = new JSONObject(json);
 
 		JSONObject body = root.getJSONObject("body");
-		JSONArray items = body.getJSONArray("items");
+		JSONArray items = body.optJSONArray("items");
 
 		List<CaloriesDto> result = new ArrayList<>();
 		if (items == null) {
@@ -125,34 +125,34 @@ public class CaloriesService {
 		}
 	}
 
-//	이름과 칼로리가 같은 데이터가 이미 존재할 경우, 저장 건너뛰기
-//	public List<CaloriesDto> syncPageToDb(int pageNo, int numOfRows, String foodName)
-//			throws IOException, SQLException , ClassNotFoundException {
-//		List<CaloriesDto> fromApi = fetchFromApi(pageNo, numOfRows, foodName);
-//		List<CaloriesDto> saved = new ArrayList<>();
-//
-//		for (CaloriesDto dto : fromApi) {
-//
-//			이름, 칼로리가 비어있으면 건너뛰기
-//			if (dto.getName() == null || dto.getName().isBlank()) {
-//				continue;
-//			}
-//
-//			이름 + 칼로리를 키로 이미 일치하면 insert 하지 않음
-//			if (caloriesDao.existsByNameANdCalories(dto.getName(), dto.getCalories()))
-//			caloriesDao.createCalories(dto);
-//		 }
-//		return fromApi;
-//	}
+	public List<CaloriesDto> syncPageToDb(int pageNo, int numOfRows, String foodName)
+			throws IOException, SQLException , ClassNotFoundException {
 
-	public CaloriesDto getCalories(String id)
-			throws ClassNotFoundException, SQLException {
-		return caloriesDao.getCalories(id);
-	}
+		// 공공 API에서 한 페이지 가져오기
+		List<CaloriesDto> fromApi = fetchFromApi(pageNo, numOfRows, foodName);
+		List<CaloriesDto> saved = new ArrayList<>();
 
-	public void deleteCalories(String id)
-			throws ClassNotFoundException, SQLException {
-		caloriesDao.deleteCalories(id);
+		for (CaloriesDto dto : fromApi) {
+
+			//이름 이름이 존재하지 않으면 건너뛰기
+			if (dto.getName() == null || dto.getName().isBlank()) {
+				continue;
+			}
+
+			// 칼로리가 존재하지 않으면 건너뛰기
+			if (dto.getCalories() == null) {
+				continue;
+			}
+
+			//이름 + 칼로리를 키로 이미 일치하면 insert 하지 않음
+			if (caloriesDao.existsByNameAndCalories(dto.getName(), dto.getCalories())) {
+				continue;
+			}
+
+			caloriesDao.createCalories(dto);
+			saved.add(dto);
+		}
+		return saved;
 	}
 }
 
