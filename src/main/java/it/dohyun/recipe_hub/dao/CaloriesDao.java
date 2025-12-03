@@ -63,6 +63,21 @@ public class CaloriesDao {
     DatabaseUtil.close(con, st);
   }
 
+	public boolean existsByNameAndCalories(String name, int calories)
+			throws SQLException, ClassNotFoundException {
+		Connection con = DatabaseUtil.getConnection();
+		String sql = "SELECT 1 FROM calories WHERE name=? AND calories=?";
+		PreparedStatement st = con.prepareStatement(sql);
+		st.setString(1, name);
+		st.setInt(2, calories);
+
+		ResultSet rs = st.executeQuery();
+		boolean exist = rs.next();
+
+		DatabaseUtil.close(con, st, rs);
+		return exist;
+	}
+
   public ArrayList<CaloriesDto> searchCalories(String name, FindOption option)
       throws SQLException, ClassNotFoundException {
     ArrayList<CaloriesDto> list = new ArrayList<>();
