@@ -192,47 +192,4 @@ public class CaloriesServlet extends HttpServlet {
 
 		}
 	}
-
-	@Override
-	public void doDelete(HttpServletRequest req, HttpServletResponse resp)
-			throws IOException {
-		// ID 기준으로 DB에서 일치하는 값을 삭제하는 API
-		resp.setContentType("application/json; charset=utf-8");
-		PrintWriter out = resp.getWriter();
-
-		Map<String, String> params;
-		try {
-			params = URLEncodeParser.parseUrlEncodedBody(req);
-		} catch (IOException e) {
-			logger.log(Level.SEVERE, "요청 본문 파싱 중 오류 발생", e);
-			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			out.write("{\"message\":\"요청 데이터를 해석하는 중 오류가 발생했습니다.\"}");
-			return;
-		}
-
-		String id = params.get("id");
-		if (id == null || id.isBlank()) {
-			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			out.write("{\"message\":\"id는 필수 값입니다.\"}");
-			return;
-		}
-
-		try {
-			CaloriesDto dto = dao.getCalories(id);
-			if (dto == null) {
-				resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-				out.write("{\"message\":\"해당 칼로리 정보를 찾을 수 없습니다.\"}");
-				return;
-			}
-
-			dao.deleteCalories(id);
-
-			resp.setStatus(HttpServletResponse.SC_OK);
-			out.write("{\"message\":\"칼로리 정보가 삭제되었습니다.\"}");
-		} catch (SQLException | ClassNotFoundException e) {
-			logger.log(Level.SEVERE, "칼로리 삭제 중 오류 발생", e);
-			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			out.write("{\"message\":\"칼로리 삭제 중 서버 오류가 발생했습니다.\"}");
-		}
-	}
 }
