@@ -22,7 +22,7 @@ public class CaloriesDao {
   }
 
   public String buildFindQuery(StringBuilder sql, FindOption option) {
-    if (!option.toString().contains("WHERE")) sql.append(" WHERE 1=1");
+    if (!option.toString().contains("WHERE")) sql.append(" AND 1=1");
     if (option.getFrom() != null) sql.append(" AND created >= ?");
     if (option.getTo() != null) sql.append(" AND created <= ?");
 
