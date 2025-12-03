@@ -23,9 +23,9 @@ import java.util.logging.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-@WebServlet("/calories")
-public class CaloriesServlet extends HttpServlet {
-  private static final Logger logger = Logger.getLogger(CaloriesServlet.class.getName());
+@WebServlet("/api/calories")
+public class CaloriesAPIServlet extends HttpServlet {
+  private static final Logger logger = Logger.getLogger(CaloriesAPIServlet.class.getName());
   private final CaloriesDao dao = new CaloriesDao();
   private CaloriesAPI service;
 
