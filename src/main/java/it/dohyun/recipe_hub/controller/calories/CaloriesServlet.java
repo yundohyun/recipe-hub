@@ -1,10 +1,10 @@
 package it.dohyun.recipe_hub.controller.calories;
 
+import it.dohyun.recipe_hub.api.CaloriesAPI;
 import it.dohyun.recipe_hub.common.types.FindOption;
 import it.dohyun.recipe_hub.common.types.SortEnum;
 import it.dohyun.recipe_hub.dao.CaloriesDao;
 import it.dohyun.recipe_hub.model.CaloriesDto;
-import it.dohyun.recipe_hub.util.CaloriesService;
 import it.dohyun.recipe_hub.util.PropertyUtil;
 import it.dohyun.recipe_hub.util.URLEncodeParser;
 import jakarta.servlet.annotation.WebServlet;
@@ -27,7 +27,7 @@ import org.json.JSONObject;
 public class CaloriesServlet extends HttpServlet {
   private static final Logger logger = Logger.getLogger(CaloriesServlet.class.getName());
   private final CaloriesDao dao = new CaloriesDao();
-  private CaloriesService service;
+  private CaloriesAPI service;
 
   @Override
   public void init() {
@@ -35,7 +35,7 @@ public class CaloriesServlet extends HttpServlet {
     PropertyUtil prop = new PropertyUtil("api.properties", List.of("calories.api.key"));
     String apiKey = prop.getProperty("calories.api.key");
 
-    this.service = new CaloriesService(apiKey, dao);
+    this.service = new CaloriesAPI(apiKey, dao);
   }
 
   @Override

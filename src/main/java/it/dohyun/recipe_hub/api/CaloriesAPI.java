@@ -1,4 +1,4 @@
-package it.dohyun.recipe_hub.util;
+package it.dohyun.recipe_hub.api;
 
 import it.dohyun.recipe_hub.dao.CaloriesDao;
 import it.dohyun.recipe_hub.model.CaloriesDto;
@@ -14,14 +14,14 @@ import java.util.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class CaloriesService {
+public class CaloriesAPI {
   private static final String BASE_URL =
       "https://apis.data.go.kr/1471000/FoodNtrCpntDbInfo02/getFoodNtrCpntDbInq02";
 
   private final String apiKey;
   private final CaloriesDao caloriesDao;
 
-  public CaloriesService(String apiKey, CaloriesDao caloriesDao) {
+  public CaloriesAPI(String apiKey, CaloriesDao caloriesDao) {
     this.apiKey = apiKey;
     this.caloriesDao = caloriesDao;
   }
