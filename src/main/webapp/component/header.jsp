@@ -30,6 +30,9 @@
 				<a href="<c:url value="/recipe"/>" class="hover:bg-[#FA5F29] hover:text-white px-4 py-2 rounded-xl">
 					<span class="text-sm md:text-base">레시피</span>
 				</a>
+				<a href="<c:url value="/calories"/>" class="hover:bg-[#FA5F29] hover:text-white px-4 py-2 rounded-xl">
+					<span class="text-sm md:text-base">칼로리</span>
+				</a>
 				<a href="<c:url value="/my"/>" class="hover:bg-[#FA5F29] hover:text-white px-4 py-2 rounded-xl">
 					<span class="text-sm md:text-base">마이페이지</span>
 				</a>
