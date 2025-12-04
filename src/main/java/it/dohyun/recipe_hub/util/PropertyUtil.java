@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.*;
 
 public class PropertyUtil {
-  private static final String BASE_PATH = "properties/";
+  private static final String BASE_PATH = "config/";
   private final Properties properties = new Properties();
 
   public PropertyUtil(String path, List<String> requireKeys) {
