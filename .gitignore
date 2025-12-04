@@ -254,9 +254,9 @@ gradle-app.setting
 # Java heap dump
 *.hprof
 
-# Properties
-**/properties/*.properties
-!**/properties/*.example.properties
+# Config
+**/config/*.properties
+!**/config/*.example.properties
 
 # Firebase
 **/resources/firebase.json
