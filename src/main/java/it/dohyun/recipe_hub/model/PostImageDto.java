@@ -4,7 +4,7 @@ import org.json.JSONObject;
 
 public class PostImageDto {
   private String postId;
-  private String imageId;
+  private String imageUrl;
 
   public String getPostId() {
     return postId;
@@ -14,18 +14,18 @@ public class PostImageDto {
     this.postId = postId;
   }
 
-  public String getImageId() {
-    return imageId;
+  public String getImageUrl() {
+    return imageUrl;
   }
 
-  public void setImageId(String imageId) {
-    this.imageId = imageId;
+  public void setImageUrl(String imageUrl) {
+    this.imageUrl = imageUrl;
   }
 
   public JSONObject toJSON() {
     JSONObject json = new JSONObject();
     json.put("postId", postId);
-    json.put("imageId", imageId);
+    json.put("imageUrl", imageUrl);
     return json;
   }
 }
