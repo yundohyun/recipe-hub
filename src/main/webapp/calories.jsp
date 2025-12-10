@@ -147,7 +147,6 @@
         toDate: document.getElementById("toDate"),
         searchBtn: document.getElementById("searchBtn"),
         resetBtn: document.getElementById("resetBtn"),
-        syncBtn: document.getElementById("syncBtn"),
         resultsContainer: document.getElementById("resultsContainer"),
         resultCount: document.getElementById("resultCount"),
         loadingContainer: document.getElementById("loadingContainer"),
@@ -186,34 +185,7 @@
         showLoading(true);
         elements.errorContainer.innerHTML = "";
 
-        const formData = new URLSearchParams();
-        formData.append("name", name);
-        formData.append("pageNo", page);
-        formData.append("numOfRows", limit);
-
-        await fetch(API_BASE_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: formData.toString(),
-        })
-          .then(function (response) {
-            if (!response.ok) throw new Error("동기화 요청 실패");
-            return response.json();
-          })
-          .then(function (data) {
-            state.currentResults = data.items || [];
-            state.totalItems = data.count || 0;
-            displayResults(state.currentResults);
-            elements.resultCount.textContent = state.totalItems + "개";
-            showSuccess(data.message || "칼로리 정보가 동기화되었습니다.");
-          })
-          .catch(function (error) {
-            console.error("동기화 오류:", error);
-            showError("동기화 중 오류가 발생했습니다.");
-          });
-
+        // 프론트에서는 POST로 동기화를 직접 호출하지 않고, 바로 GET으로 검색합니다.
         state.foodName = name;
         state.currentPage = page;
 
@@ -222,24 +194,20 @@
         params.append("page", page);
         params.append("limit", limit);
 
-        await fetch(API_BASE_URL + "?" + params.toString())
-          .then(function (response) {
-            if (!response.ok) throw new Error("검색 요청 실패");
-            return response.json();
-          })
-          .then(function (data) {
-            state.currentResults = data.items || [];
-            state.totalItems = data.count || 0;
-            displayResults(state.currentResults);
-            elements.resultCount.textContent = state.totalItems + "개";
-          })
-          .catch(function (error) {
-            console.error("검색 오류:", error);
-            showError("검색 중 오류가 발생했습니다.");
-          })
-          .finally(function () {
-            showLoading(false);
-          });
+        try {
+          const response = await fetch(API_BASE_URL + "?" + params.toString());
+          if (!response.ok) throw new Error("검색 요청 실패");
+          const data = await response.json();
+          state.currentResults = data.items || [];
+          state.totalItems = data.count || 0;
+          displayResults(state.currentResults);
+          elements.resultCount.textContent = state.totalItems + "개";
+        } catch (error) {
+          console.error("검색 오류:", error);
+          showError("검색 중 오류가 발생했습니다.");
+        } finally {
+          showLoading(false);
+        }
       }
 
       function displayResults(items) {
