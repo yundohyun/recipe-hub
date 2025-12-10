@@ -9,16 +9,16 @@ public class PostImageDao {
   public PostImageDto createDto(ResultSet rs) throws SQLException {
     PostImageDto dto = new PostImageDto();
     dto.setPostId(rs.getString("post_id"));
-    dto.setImageId(rs.getString("image_id"));
+    dto.setImageUrl(rs.getString("image_url"));
     return dto;
   }
 
   public void createPostImage(PostImageDto data) throws SQLException, ClassNotFoundException {
     Connection con = DatabaseUtil.getConnection();
     PreparedStatement ps =
-        con.prepareStatement("INSERT INTO post_image (post_id, image_id) VALUES (?, ?)");
+        con.prepareStatement("INSERT INTO post_image (post_id, image_url) VALUES (?, ?)");
     ps.setString(1, data.getPostId());
-    ps.setString(2, data.getImageId());
+    ps.setString(2, data.getImageUrl());
     ps.executeUpdate();
     DatabaseUtil.close(con, ps);
   }

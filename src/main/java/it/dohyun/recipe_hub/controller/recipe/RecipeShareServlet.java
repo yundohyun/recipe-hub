@@ -8,7 +8,6 @@ import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import jakarta.servlet.http.Part;
-
 import java.io.*;
 import java.sql.SQLException;
 import java.util.*;
@@ -144,18 +143,13 @@ public class RecipeShareServlet extends HttpServlet {
         String filename = recipeId + "/content_" + step + "_" + System.currentTimeMillis() + ext;
         try (InputStream is = imgPart.getInputStream()) {
           String publicUrl = FirebaseStorageUtil.uploadFile(filename, is, imgPart.getContentType());
-          ImageDto imgDto = new ImageDto();
-          imgDto.setImage(publicUrl);
-          ImageDao imgDao = new ImageDao();
-          imgDto = imgDao.setImage(imgDto);
-
-          // link image with content
-          if (imgDto.getId() == null || imgDto.getId().isBlank()) {
-            logger.log(Level.WARNING, "이미지 업로드 후 DB 이미지 id를 얻지 못했습니다. content step=" + step + " url=" + imgDto.getImage());
+          // store image URL directly to recipe_content_image
+          if (publicUrl == null || publicUrl.isBlank()) {
+            logger.log(Level.WARNING, "이미지 업로드 후 publicUrl이 비어있습니다. content step=" + step);
           } else {
             RecipeContentImageDto mapping = new RecipeContentImageDto();
             mapping.setRecipeContentId(contentId);
-            mapping.setImageId(imgDto.getId());
+            mapping.setImageUrl(publicUrl);
             contentImageDao.createRecipeContentImage(mapping);
           }
         } catch (Exception e) {

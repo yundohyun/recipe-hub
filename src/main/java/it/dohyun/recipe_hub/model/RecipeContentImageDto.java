@@ -4,7 +4,7 @@ import org.json.JSONObject;
 
 public class RecipeContentImageDto {
   private String recipeContentId;
-  private String imageId;
+  private String imageUrl;
 
   public String getRecipeContentId() {
     return recipeContentId;
@@ -14,18 +14,18 @@ public class RecipeContentImageDto {
     this.recipeContentId = recipeContentId;
   }
 
-  public String getImageId() {
-    return imageId;
+  public String getImageUrl() {
+    return imageUrl;
   }
 
-  public void setImageId(String imageId) {
-    this.imageId = imageId;
+  public void setImageUrl(String imageUrl) {
+    this.imageUrl = imageUrl;
   }
 
   public JSONObject toJSON() {
     JSONObject json = new JSONObject();
     json.put("recipeContentId", recipeContentId);
-    json.put("imageId", imageId);
+    json.put("imageUrl", imageUrl);
     return json;
   }
 }

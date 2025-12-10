@@ -38,7 +38,7 @@
                 <c:if test="${not empty contentImages[step.id]}">
                   <div class="flex gap-2 mt-2">
                     <c:forEach items="${contentImages[step.id]}" var="img">
-                      <img src="${img.image}" class="w-40 h-40 object-cover rounded" />
+                      <img src="${img}" class="w-40 h-40 object-cover rounded" />
                     </c:forEach>
                   </div>
                 </c:if>
@@ -54,4 +54,3 @@
     </div>
   </body>
 </html>
-
