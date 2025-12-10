@@ -30,6 +30,7 @@ public class RecipeViewServlet extends HttpServlet {
     RecipeContentImageDao contentImageDao = new RecipeContentImageDao();
     RecipeCaloriesDao recipeCaloriesDao = new RecipeCaloriesDao();
     MemberDao memberDao = new MemberDao();
+    RecipeLikeDao recipeLikeDao = new RecipeLikeDao();
 
     try {
       RecipeDto recipe = recipeDao.getRecipe(id);
@@ -47,13 +48,21 @@ public class RecipeViewServlet extends HttpServlet {
         List<RecipeContentImageDto> imgs = contentImageDao.getRecipeContentImages(cd.getId());
         List<String> imageUrls = new ArrayList<>();
         for (RecipeContentImageDto rci : imgs) {
-          if (rci.getImageUrl() != null && !rci.getImageUrl().isBlank()) imageUrls.add(rci.getImageUrl());
+          if (rci.getImageUrl() != null && !rci.getImageUrl().isBlank())
+            imageUrls.add(rci.getImageUrl());
         }
         contentImages.put(cd.getId(), imageUrls);
       }
 
       RecipeCaloriesDto rc = recipeCaloriesDao.getRecipeCalories(id);
       MemberDto author = memberDao.getMember(recipe.getMemberId());
+      // 좋아요 수 조회
+      int likeCount = 0;
+      try {
+        likeCount = recipeLikeDao.countLikesByRecipeId(id);
+      } catch (SQLException | ClassNotFoundException ex) {
+        logger.log(Level.WARNING, "좋아요 수 조회 중 오류", ex);
+      }
 
       req.setAttribute("recipe", recipe);
       req.setAttribute("ingredients", ingredients);
@@ -61,6 +70,7 @@ public class RecipeViewServlet extends HttpServlet {
       req.setAttribute("contentImages", contentImages);
       req.setAttribute("recipeCalories", rc);
       req.setAttribute("author", author);
+      req.setAttribute("likeCount", likeCount);
 
       req.getRequestDispatcher("/recipe/view.jsp").forward(req, resp);
 
