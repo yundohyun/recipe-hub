@@ -174,7 +174,7 @@ public class MemberServlet extends HttpServlet {
       try {
         avatarPart = req.getPart("avatar");
       } catch (IllegalStateException ise) {
-        logger.log(Level.WARNING, "파일 업로드 크기 초과", ise);
+        // 파일 크기 초과는 클라이언트 에러로 응답만 반환합니다. 로그는 남기지 않습니다.
         this.sendResponse(res, HttpServletResponse.SC_BAD_REQUEST, "업로드 파일이 너무 큽니다.");
         return;
       }
@@ -194,6 +194,7 @@ public class MemberServlet extends HttpServlet {
               FirebaseStorageUtil.uploadFile(filename, is, avatarPart.getContentType());
           dto.setAvatar(publicUrl);
         } catch (Exception ex) {
+          // 심각한 업로드 오류는 서버 로그에 SEVERE로 남깁니다.
           logger.log(Level.SEVERE, "Firebase Storage 업로드 실패", ex);
           this.sendResponse(
               res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "파일 업로드 중 오류가 발생했습니다.");
