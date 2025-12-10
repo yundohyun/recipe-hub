@@ -101,7 +101,44 @@ public class CaloriesAPIServlet extends HttpServlet {
       }
 
       String keyword = (name == null) ? "" : name;
+      // 요청한 페이지와 개수(기본값)
+      int reqPage = 1;
+      int reqLimit = 10;
+      try {
+        if (pageParam != null && !pageParam.isBlank()) reqPage = Integer.parseInt(pageParam);
+      } catch (NumberFormatException ignore) {
+      }
+      try {
+        if (limitParam != null && !limitParam.isBlank()) reqLimit = Integer.parseInt(limitParam);
+      } catch (NumberFormatException ignore) {
+      }
       ArrayList<CaloriesDto> list = dao.searchCalories(keyword, option);
+
+      // DB에 내용이 없으면, 외부 API에서 동기화한 후 동기적으로 재조회 (기존 동작)
+      // DB에 내용이 없거나(또는 1페이지 요청에서 DB 결과가 요청한 개수보다 적으면) 외부 API에서 동기화한 후 재조회
+      if (list.isEmpty() || (reqPage == 1 && list.size() < reqLimit)) {
+        int syncPageNo;
+        int syncNumOfRows;
+        // 동기화할 페이지/건수는 요청한 값으로 맞춤
+        syncPageNo = reqPage;
+        syncNumOfRows = reqLimit;
+
+        try {
+          service.syncPageToDb(syncPageNo, syncNumOfRows, keyword);
+          // 동기화 후 재조회
+          list = dao.searchCalories(keyword, option);
+        } catch (IOException e) {
+          logger.log(Level.SEVERE, "외부 칼로리 API 호출 중 오류 발생", e);
+          resp.setStatus(HttpServletResponse.SC_BAD_GATEWAY);
+          out.write("{\"message\":\"외부 칼로리 API 호출 중 서버 오류가 발생했습니다.\"}");
+          return;
+        } catch (SQLException | ClassNotFoundException e) {
+          logger.log(Level.SEVERE, "칼로리 DB저장/조회 중 오류 발생", e);
+          resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+          out.write("{\"message\":\"칼로리 조회 중 서버 오류가 발생했습니다.\"}");
+          return;
+        }
+      }
 
       JSONArray items = new JSONArray();
       for (CaloriesDto c : list) {
