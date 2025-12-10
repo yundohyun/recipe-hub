@@ -3,6 +3,7 @@ package it.dohyun.recipe_hub.dao;
 import it.dohyun.recipe_hub.model.RecipeIngredientDto;
 import it.dohyun.recipe_hub.util.DatabaseUtil;
 import java.sql.*;
+import java.util.ArrayList;
 
 public class RecipeIngredientDao {
   private RecipeIngredientDto createDto(ResultSet rs) throws SQLException {
@@ -62,5 +63,21 @@ public class RecipeIngredientDao {
     ps.setString(1, id);
     ps.executeUpdate();
     DatabaseUtil.close(con, ps);
+  }
+
+  // New method to get all ingredients for a recipe
+  public ArrayList<RecipeIngredientDto> getRecipeIngredientsByRecipeId(String recipeId)
+      throws SQLException, ClassNotFoundException {
+    ArrayList<RecipeIngredientDto> list = new ArrayList<>();
+    Connection con = DatabaseUtil.getConnection();
+    PreparedStatement ps = con.prepareStatement(
+        "SELECT * FROM recipe_ingredient WHERE recipe_id = ? ORDER BY created");
+    ps.setString(1, recipeId);
+    ResultSet rs = ps.executeQuery();
+    while (rs.next()) {
+      list.add(this.createDto(rs));
+    }
+    DatabaseUtil.close(con, ps, rs);
+    return list;
   }
 }

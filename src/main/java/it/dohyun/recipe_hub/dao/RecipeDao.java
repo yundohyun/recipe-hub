@@ -3,6 +3,8 @@ package it.dohyun.recipe_hub.dao;
 import it.dohyun.recipe_hub.model.RecipeDto;
 import it.dohyun.recipe_hub.util.DatabaseUtil;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class RecipeDao {
   public RecipeDto createDto(ResultSet rs) throws SQLException {
@@ -76,5 +78,38 @@ public class RecipeDao {
     ps.setString(1, id);
     ps.executeUpdate();
     DatabaseUtil.close(con, ps);
+  }
+
+  // New: search recipes by title with pagination
+  public List<RecipeDto> searchRecipes(String keyword, Integer page, Integer limit)
+      throws SQLException, ClassNotFoundException {
+    List<RecipeDto> list = new ArrayList<>();
+    Connection con = DatabaseUtil.getConnection();
+    String sql = "SELECT * FROM recipe WHERE title LIKE ? ORDER BY created DESC";
+    if (page != null && limit != null) sql += " LIMIT ? OFFSET ?";
+    PreparedStatement ps = con.prepareStatement(sql);
+    int idx = 1;
+    ps.setString(idx++, "%" + (keyword == null ? "" : keyword) + "%");
+    if (page != null && limit != null) {
+      ps.setInt(idx++, limit);
+      ps.setInt(idx, (page - 1) * limit);
+    }
+    ResultSet rs = ps.executeQuery();
+    while (rs.next()) {
+      list.add(createDto(rs));
+    }
+    DatabaseUtil.close(con, ps, rs);
+    return list;
+  }
+
+  public int countRecipes(String keyword) throws SQLException, ClassNotFoundException {
+    Connection con = DatabaseUtil.getConnection();
+    PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM recipe WHERE title LIKE ?");
+    ps.setString(1, "%" + (keyword == null ? "" : keyword) + "%");
+    ResultSet rs = ps.executeQuery();
+    int count = 0;
+    if (rs.next()) count = rs.getInt(1);
+    DatabaseUtil.close(con, ps, rs);
+    return count;
   }
 }

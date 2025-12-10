@@ -1,0 +1,202 @@
+package it.dohyun.recipe_hub.controller.recipe;
+
+import it.dohyun.recipe_hub.dao.*;
+import it.dohyun.recipe_hub.model.*;
+import it.dohyun.recipe_hub.util.firebase.FirebaseStorageUtil;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.*;
+import jakarta.servlet.http.Part;
+
+import java.io.*;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+@WebServlet("/recipe/share")
+@MultipartConfig(
+    fileSizeThreshold = 1024 * 1024,
+    maxFileSize = 10 * 1024 * 1024,
+    maxRequestSize = 50 * 1024 * 1024)
+public class RecipeShareServlet extends HttpServlet {
+  private static final Logger logger = Logger.getLogger(RecipeShareServlet.class.getName());
+
+  @Override
+  protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+      throws ServletException, IOException {
+    req.getRequestDispatcher("/recipe/share.jsp").forward(req, resp);
+  }
+
+  @Override
+  protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+      throws ServletException, IOException {
+    req.setCharacterEncoding("utf-8");
+
+    HttpSession session = req.getSession(false);
+    if (session == null || session.getAttribute("loginId") == null) {
+      req.setAttribute("error", "로그인이 필요합니다.");
+      req.getRequestDispatcher("/login.jsp").forward(req, resp);
+      return;
+    }
+
+    String memberId = (String) session.getAttribute("loginId");
+
+    String title = req.getParameter("title");
+    String serveStr = req.getParameter("serve");
+    String durationStr = req.getParameter("duration");
+    String caloriesId = req.getParameter("caloriesId");
+
+    String[] ingredients = req.getParameterValues("ingredient[]");
+    String[] amounts = req.getParameterValues("amount[]");
+    String[] contents = req.getParameterValues("content[]");
+
+    // basic validation
+    if (title == null || title.isBlank()) {
+      req.setAttribute("error", "제목은 필수입니다.");
+      req.getRequestDispatcher("/recipe/share.jsp").forward(req, resp);
+      return;
+    }
+
+    int serve = 1;
+    int duration = 0;
+    try {
+      if (serveStr != null && !serveStr.isBlank()) serve = Integer.parseInt(serveStr);
+      if (durationStr != null && !durationStr.isBlank()) duration = Integer.parseInt(durationStr);
+    } catch (NumberFormatException nfe) {
+      req.setAttribute("error", "인원수 또는 소요시간 형식이 잘못되었습니다.");
+      req.getRequestDispatcher("/recipe/share.jsp").forward(req, resp);
+      return;
+    }
+
+    // create recipe
+    RecipeDao recipeDao = new RecipeDao();
+    RecipeIngredientDao ingredientDao = new RecipeIngredientDao();
+    RecipeContentDao contentDao = new RecipeContentDao();
+    RecipeContentImageDao contentImageDao = new RecipeContentImageDao();
+    RecipeCaloriesDao recipeCaloriesDao = new RecipeCaloriesDao();
+
+    String recipeId = UUID.randomUUID().toString();
+    RecipeDto recipe = new RecipeDto();
+    recipe.setId(recipeId);
+    recipe.setMemberId(memberId);
+    recipe.setTitle(title);
+    recipe.setServe(serve);
+    recipe.setDuration(duration);
+    recipe.setViewCount(0);
+
+    try {
+      recipeDao.createRecipe(recipe);
+
+      // ingredients
+      if (ingredients != null) {
+        for (int i = 0; i < ingredients.length; i++) {
+          String ing = ingredients[i];
+          String amt = (amounts != null && amounts.length > i) ? amounts[i] : null;
+          if (ing == null || ing.isBlank()) continue;
+          RecipeIngredientDto ingDto = new RecipeIngredientDto();
+          ingDto.setRecipeId(recipeId);
+          ingDto.setIngredient(ing);
+          ingDto.setAmount(amt);
+          ingredientDao.createRecipeIngredient(ingDto);
+        }
+      }
+
+      // contents
+      if (contents != null) {
+        for (int i = 0; i < contents.length; i++) {
+          String c = contents[i];
+          if (c == null || c.isBlank()) continue;
+          RecipeContentDto contentDto = new RecipeContentDto();
+          contentDto.setStep(i + 1);
+          contentDto.setRecipeId(recipeId);
+          contentDto.setContent(c);
+          contentDao.createRecipeContent(contentDto);
+        }
+      }
+
+      // handle images for contents: parts named contentImage[]
+      Collection<Part> parts = req.getParts();
+      List<Part> contentImageParts = new ArrayList<>();
+      for (Part p : parts) {
+        if (p.getName() != null && p.getName().equals("contentImage[]")) {
+          contentImageParts.add(p);
+        }
+      }
+
+      // fetch created contents to map step -> id
+      List<RecipeContentDto> createdContents = contentDao.getRecipeContents(recipeId);
+      Map<Integer, String> stepToContentId = new HashMap<>();
+      for (RecipeContentDto cd : createdContents) {
+        if (cd.getStep() != null) stepToContentId.put(cd.getStep(), cd.getId());
+      }
+
+      for (int i = 0; i < contentImageParts.size(); i++) {
+        Part imgPart = contentImageParts.get(i);
+        if (imgPart == null || imgPart.getSize() == 0) continue;
+        int step = i + 1; // assume order corresponds to steps
+        String contentId = stepToContentId.get(step);
+        if (contentId == null) continue;
+
+        String submitted = getSubmittedFileName(imgPart);
+        String ext = getFileExtension(submitted);
+        String filename = recipeId + "/content_" + step + "_" + System.currentTimeMillis() + ext;
+        try (InputStream is = imgPart.getInputStream()) {
+          String publicUrl = FirebaseStorageUtil.uploadFile(filename, is, imgPart.getContentType());
+          ImageDto imgDto = new ImageDto();
+          imgDto.setImage(publicUrl);
+          ImageDao imgDao = new ImageDao();
+          imgDto = imgDao.setImage(imgDto);
+
+          // link image with content
+          if (imgDto.getId() == null || imgDto.getId().isBlank()) {
+            logger.log(Level.WARNING, "이미지 업로드 후 DB 이미지 id를 얻지 못했습니다. content step=" + step + " url=" + imgDto.getImage());
+          } else {
+            RecipeContentImageDto mapping = new RecipeContentImageDto();
+            mapping.setRecipeContentId(contentId);
+            mapping.setImageId(imgDto.getId());
+            contentImageDao.createRecipeContentImage(mapping);
+          }
+        } catch (Exception e) {
+          logger.log(Level.WARNING, "이미지 업로드 중 오류 발생", e);
+          // continue processing other images
+        }
+      }
+
+      // calories mapping
+      if (caloriesId != null && !caloriesId.isBlank()) {
+        RecipeCaloriesDto rc = new RecipeCaloriesDto();
+        rc.setRecipeId(recipeId);
+        rc.setCaloriesId(caloriesId);
+        recipeCaloriesDao.createRecipeCalories(rc);
+      }
+
+      // success -> redirect to home or recipe list
+      resp.sendRedirect(req.getContextPath() + "/");
+
+    } catch (SQLException | ClassNotFoundException e) {
+      logger.log(Level.SEVERE, "레시피 생성 중 오류", e);
+      req.setAttribute("error", "레시피 생성 중 오류가 발생했습니다.");
+      req.getRequestDispatcher("/recipe/share.jsp").forward(req, resp);
+    }
+  }
+
+  private static String getSubmittedFileName(Part part) {
+    String header = part.getHeader("content-disposition");
+    if (header == null) return null;
+    for (String cd : header.split(";")) {
+      if (cd.trim().startsWith("filename")) {
+        String fn = cd.substring(cd.indexOf('=') + 1).trim().replace("\"", "");
+        return fn.substring(fn.lastIndexOf(File.separator) + 1);
+      }
+    }
+    return null;
+  }
+
+  private static String getFileExtension(String name) {
+    if (name == null) return "";
+    int idx = name.lastIndexOf('.');
+    return idx >= 0 ? name.substring(idx) : "";
+  }
+}
