@@ -5,7 +5,6 @@ import it.dohyun.recipe_hub.model.*;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
@@ -30,7 +29,6 @@ public class RecipeViewServlet extends HttpServlet {
     RecipeContentDao contentDao = new RecipeContentDao();
     RecipeContentImageDao contentImageDao = new RecipeContentImageDao();
     RecipeCaloriesDao recipeCaloriesDao = new RecipeCaloriesDao();
-    ImageDao imageDao = new ImageDao();
     MemberDao memberDao = new MemberDao();
 
     try {
@@ -44,15 +42,14 @@ public class RecipeViewServlet extends HttpServlet {
       List<RecipeContentDto> contents = contentDao.getRecipeContents(id);
 
       // map content id -> list of image urls
-      Map<String, List<ImageDto>> contentImages = new HashMap<>();
+      Map<String, List<String>> contentImages = new HashMap<>();
       for (RecipeContentDto cd : contents) {
         List<RecipeContentImageDto> imgs = contentImageDao.getRecipeContentImages(cd.getId());
-        List<ImageDto> imageDtos = new ArrayList<>();
+        List<String> imageUrls = new ArrayList<>();
         for (RecipeContentImageDto rci : imgs) {
-          ImageDto im = imageDao.getImage(rci.getImageId());
-          if (im != null) imageDtos.add(im);
+          if (rci.getImageUrl() != null && !rci.getImageUrl().isBlank()) imageUrls.add(rci.getImageUrl());
         }
-        contentImages.put(cd.getId(), imageDtos);
+        contentImages.put(cd.getId(), imageUrls);
       }
 
       RecipeCaloriesDto rc = recipeCaloriesDao.getRecipeCalories(id);
@@ -73,4 +70,3 @@ public class RecipeViewServlet extends HttpServlet {
     }
   }
 }
-
