@@ -21,7 +21,7 @@
 		<%@ include file="/component/header.jsp" %>
 		<div class="flex flex-col w-full xl:w-295 h-full px-4 lg:px-8 xl:px-0">
 			<section class="flex flex-col items-center w-full gap-y-8 py-12">
-				<div class="w-full max-w-4xl bg-white rounded-2xl shadow-sm px-10 py-12 profile-card">
+				<div class="w-full max-w-5xl bg-white rounded-2xl shadow-sm px-10 py-12 profile-card">
 					<c:url var="memberUrl" value="/member" />
 					<c:url var="passwordUrl" value="/password" />
 					<c:url var="myUrl" value="/my" />
