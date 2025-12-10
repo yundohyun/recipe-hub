@@ -9,7 +9,7 @@ public class RecipeContentImageDao {
   private RecipeContentImageDto createDto(ResultSet rs) throws SQLException {
     RecipeContentImageDto dto = new RecipeContentImageDto();
     dto.setRecipeContentId(rs.getString("recipe_content_id"));
-    dto.setImageId(rs.getString("image_id"));
+    dto.setImageUrl(rs.getString("image_url"));
     return dto;
   }
 
@@ -18,9 +18,9 @@ public class RecipeContentImageDao {
     Connection con = DatabaseUtil.getConnection();
     PreparedStatement ps =
         con.prepareStatement(
-            "INSERT INTO recipe_content_image (recipe_content_id, image_id) VALUES (?, ?)");
+            "INSERT INTO recipe_content_image (recipe_content_id, image_url) VALUES (?, ?)");
     ps.setString(1, data.getRecipeContentId());
-    ps.setString(2, data.getImageId());
+    ps.setString(2, data.getImageUrl());
     ps.executeUpdate();
     DatabaseUtil.close(con, ps);
   }
