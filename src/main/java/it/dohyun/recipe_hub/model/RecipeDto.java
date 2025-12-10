@@ -10,6 +10,9 @@ public class RecipeDto {
   private Integer serve;
   private Integer duration;
   private Integer viewCount;
+  private String thumbnail;
+  private String description;
+  private String difficulty;
   private LocalDateTime created;
   private LocalDateTime updated;
 
@@ -61,6 +64,30 @@ public class RecipeDto {
     this.viewCount = viewCount;
   }
 
+  public String getThumbnail() {
+    return thumbnail;
+  }
+
+  public void setThumbnail(String thumbnail) {
+    this.thumbnail = thumbnail;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
+  }
+
+  public String getDifficulty() {
+    return difficulty;
+  }
+
+  public void setDifficulty(String difficulty) {
+    this.difficulty = difficulty;
+  }
+
   public LocalDateTime getCreated() {
     return created;
   }
@@ -77,11 +104,27 @@ public class RecipeDto {
     this.updated = updated;
   }
 
+  public Integer getLikeCount() {
+    // No likeCount in DTO; fall back to viewCount if available, else 0
+    return (viewCount != null) ? viewCount : 0;
+  }
+
+  public Double getRating() {
+    return null; // rating not available
+  }
+
+  public Integer getRatingCount() {
+    return null; // rating count not available
+  }
+
   public JSONObject toJSON() {
     JSONObject json = new JSONObject();
     json.put("id", id);
     json.put("memberId", memberId);
     json.put("title", title);
+    json.put("thumbnail", thumbnail);
+    json.put("description", description);
+    json.put("difficulty", difficulty);
     json.put("serve", serve);
     json.put("duration", duration);
     json.put("viewCount", viewCount);

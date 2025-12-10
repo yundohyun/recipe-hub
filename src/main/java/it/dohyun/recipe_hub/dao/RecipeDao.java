@@ -15,6 +15,10 @@ public class RecipeDao {
     dto.setServe(rs.getInt("serve"));
     dto.setDuration(rs.getInt("duration"));
     dto.setViewCount(rs.getInt("view_count"));
+    // new fields
+    dto.setThumbnail(rs.getString("thumbnail"));
+    dto.setDescription(rs.getString("description"));
+    dto.setDifficulty(rs.getString("difficulty"));
     dto.setCreated(rs.getTimestamp("created").toLocalDateTime());
     dto.setUpdated(rs.getTimestamp("updated").toLocalDateTime());
     return dto;
@@ -38,13 +42,16 @@ public class RecipeDao {
     Connection con = DatabaseUtil.getConnection();
     PreparedStatement ps =
         con.prepareStatement(
-            "INSERT INTO recipe (id, member_id, title, serve, duration, view_count) VALUES (?, ?, ?, ?, ?, ?)");
+            "INSERT INTO recipe (id, member_id, title, serve, duration, view_count, thumbnail, description, difficulty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
     ps.setString(1, data.getId());
     ps.setString(2, data.getMemberId());
     ps.setString(3, data.getTitle());
     ps.setInt(4, data.getServe());
     ps.setInt(5, data.getDuration());
     ps.setInt(6, data.getViewCount());
+    ps.setString(7, data.getThumbnail());
+    ps.setString(8, data.getDescription());
+    ps.setString(9, data.getDifficulty());
     ps.executeUpdate();
     DatabaseUtil.close(con, ps);
   }
@@ -53,12 +60,15 @@ public class RecipeDao {
     Connection con = DatabaseUtil.getConnection();
     PreparedStatement ps =
         con.prepareStatement(
-            "UPDATE recipe SET title = ?, serve = ?, duration = ?, view_count = ?, updated = CURRENT_TIMESTAMP WHERE id = ?");
+            "UPDATE recipe SET title = ?, serve = ?, duration = ?, view_count = ?, thumbnail = ?, description = ?, difficulty = ?, updated = CURRENT_TIMESTAMP WHERE id = ?");
     ps.setString(1, data.getTitle());
     ps.setInt(2, data.getServe());
     ps.setInt(3, data.getDuration());
     ps.setInt(4, data.getViewCount());
-    ps.setString(5, data.getId());
+    ps.setString(5, data.getThumbnail());
+    ps.setString(6, data.getDescription());
+    ps.setString(7, data.getDifficulty());
+    ps.setString(8, data.getId());
     ps.executeUpdate();
     DatabaseUtil.close(con, ps);
   }
