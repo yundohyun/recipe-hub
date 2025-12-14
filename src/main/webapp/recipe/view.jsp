@@ -12,7 +12,7 @@
       <c:choose>
         <c:when test="${not empty recipe}">
           <!-- widened container for desktop -->
-					<div class="flex flex-col w-full xl:w-295 h-full px-4 lg:px-8 xl:px-0">
+					<div class="max-h-6xl flex flex-col w-full xl:w-295 h-full px-4 lg:px-8 xl:px-0">
 
             <!-- Hero -->
             <div class="mt-12 h-72 md:h-96 lg:h-[28rem] bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl flex items-center justify-center text-9xl mb-8 border border-border overflow-hidden relative">
@@ -37,6 +37,23 @@
                       <c:otherwise>간단하고 맛있는 레시피입니다.</c:otherwise>
                     </c:choose>
                   </p>
+                  <!-- Category badge -->
+                  <c:if test="${not empty recipe.category}">
+                    <div class="mt-3">
+                      <span class="inline-block px-3 py-1 rounded-full bg-muted text-sm font-medium">
+                        <c:choose>
+                          <c:when test="${recipe.category == 'etc'}">카테고리: 기타</c:when>
+                          <c:when test="${recipe.category == 'egg'}">카테고리: 계란요리</c:when>
+                          <c:when test="${recipe.category == 'street'}">카테고리: 분식</c:when>
+                          <c:when test="${recipe.category == 'soup'}">카테고리: 국&탕</c:when>
+                          <c:when test="${recipe.category == 'rice'}">카테고리: 밥요리</c:when>
+                          <c:when test="${recipe.category == 'pasta'}">카테고리: 파스타</c:when>
+                          <c:when test="${recipe.category == 'grill'}">카테고리: 구이</c:when>
+                          <c:otherwise>카테고리: <c:out value="${recipe.category}"/></c:otherwise>
+                        </c:choose>
+                      </span>
+                    </div>
+                  </c:if>
                 </div>
 
                 <div class="flex flex-col items-center gap-3">
