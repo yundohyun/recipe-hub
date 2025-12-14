@@ -63,6 +63,7 @@ public class RecipeShareServlet extends HttpServlet {
     String title = req.getParameter("title");
     String description = req.getParameter("description");
     String difficulty = req.getParameter("difficulty");
+    String category = req.getParameter("category");
     String serveStr = req.getParameter("serve");
     String durationStr = req.getParameter("duration");
     String caloriesId = req.getParameter("caloriesId");
@@ -115,6 +116,21 @@ public class RecipeShareServlet extends HttpServlet {
     recipe.setTitle(title);
     recipe.setDescription(description);
     recipe.setDifficulty(difficulty);
+    try {
+      if (category == null || category.isBlank()) {
+        recipe.setCategory(null);
+        java.util.Set<String> allowed = new java.util.HashSet<>(java.util.Arrays.asList("etc", "egg", "street", "soup", "rice", "pasta", "grill"));
+        if (!allowed.contains(category)) {
+          logger.log(java.util.logging.Level.WARNING, "Unknown category received: " + category + ". Falling back to 'etc'.");
+          recipe.setCategory(null);
+        } else {
+          recipe.setCategory(category);
+        }
+      }
+    } catch (Exception ex) {
+      logger.log(java.util.logging.Level.WARNING, "Error validating category, defaulting to etc", ex);
+      recipe.setCategory(null);
+    }
     recipe.setServe(serve);
     recipe.setDuration(duration);
     recipe.setViewCount(0);
