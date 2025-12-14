@@ -34,8 +34,10 @@ public class RecipeListServlet extends HttpServlet {
     MemberDao memberDao = new MemberDao();
 
     try {
-      int total = recipeDao.countRecipes(q);
-      List<RecipeDto> list = recipeDao.searchRecipes(q, page, limit);
+      String categoryParam = req.getParameter("category");
+      // total and list should consider selected category
+      int total = recipeDao.countRecipes(q, categoryParam);
+      List<RecipeDto> list = recipeDao.searchRecipes(q, categoryParam, page, limit);
 
       Map<String, MemberDto> authors = new HashMap<>();
       for (RecipeDto r : list) {
@@ -49,6 +51,19 @@ public class RecipeListServlet extends HttpServlet {
       req.setAttribute("page", page);
       req.setAttribute("limit", limit);
       req.setAttribute("q", q == null ? "" : q);
+      // provide category options for the UI
+      java.util.Map<String, String> categories = new java.util.LinkedHashMap<>();
+      categories.put("etc", "기타");
+      categories.put("egg", "계란요리");
+      categories.put("street", "분식");
+      categories.put("soup", "국&탕");
+      categories.put("rice", "밥요리");
+      categories.put("pasta", "파스타");
+      categories.put("grill", "구이");
+      req.setAttribute("categories", categories);
+
+      // keep selected category if provided
+      req.setAttribute("category", categoryParam == null ? "" : categoryParam);
 
       req.getRequestDispatcher("/recipe/index.jsp").forward(req, resp);
     } catch (SQLException | ClassNotFoundException e) {
@@ -57,4 +72,3 @@ public class RecipeListServlet extends HttpServlet {
     }
   }
 }
-
