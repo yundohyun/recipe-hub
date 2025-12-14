@@ -92,15 +92,20 @@ public class RecipeDao {
     DatabaseUtil.close(con, ps);
   }
 
-  public List<RecipeDto> searchRecipes(String keyword, Integer page, Integer limit)
+  public List<RecipeDto> searchRecipes(String keyword, String category, Integer page, Integer limit)
       throws SQLException, ClassNotFoundException {
     List<RecipeDto> list = new ArrayList<>();
     Connection con = DatabaseUtil.getConnection();
-    String sql = "SELECT * FROM recipe WHERE title LIKE ? ORDER BY created DESC";
-    if (page != null && limit != null) sql += " LIMIT ? OFFSET ?";
-    PreparedStatement ps = con.prepareStatement(sql);
+    StringBuilder sb = new StringBuilder("SELECT * FROM recipe WHERE title LIKE ?");
+    boolean hasCategory = (category != null && !category.isBlank());
+    if (hasCategory) sb.append(" AND category = ?");
+    sb.append(" ORDER BY created DESC");
+    if (page != null && limit != null) sb.append(" LIMIT ? OFFSET ?");
+
+    PreparedStatement ps = con.prepareStatement(sb.toString());
     int idx = 1;
     ps.setString(idx++, "%" + (keyword == null ? "" : keyword) + "%");
+    if (hasCategory) ps.setString(idx++, category);
     if (page != null && limit != null) {
       ps.setInt(idx++, limit);
       ps.setInt(idx, (page - 1) * limit);
@@ -113,10 +118,15 @@ public class RecipeDao {
     return list;
   }
 
-  public int countRecipes(String keyword) throws SQLException, ClassNotFoundException {
+  public int countRecipes(String keyword, String category) throws SQLException, ClassNotFoundException {
     Connection con = DatabaseUtil.getConnection();
-    PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM recipe WHERE title LIKE ?");
-    ps.setString(1, "%" + (keyword == null ? "" : keyword) + "%");
+    StringBuilder sb = new StringBuilder("SELECT COUNT(*) FROM recipe WHERE title LIKE ?");
+    boolean hasCategory = (category != null && !category.isBlank());
+    if (hasCategory) sb.append(" AND category = ?");
+    PreparedStatement ps = con.prepareStatement(sb.toString());
+    int idx = 1;
+    ps.setString(idx++, "%" + (keyword == null ? "" : keyword) + "%");
+    if (hasCategory) ps.setString(idx++, category);
     ResultSet rs = ps.executeQuery();
     int count = 0;
     if (rs.next()) count = rs.getInt(1);
