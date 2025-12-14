@@ -16,7 +16,7 @@
 				<div class="text-card-foreground bg-white flex items-center flex-col gap-8 rounded-2xl px-12 py-18">
 					<div class="flex flex-col items-center gap-4">
 						<span class="font-semibold text-4xl">회원가입</span>
-						<span class="text-lg text-gray-700">RecipeHub 커뮤니티에 참여하세요</span>
+						<span class="text-lg text-gray-700">RecipeHub에 참여하세요</span>
 					</div>
 					<form class="flex flex-col gap-9" action="<c:url value="/register"/>" method="post">
 						<div class="flex flex-col gap-4">

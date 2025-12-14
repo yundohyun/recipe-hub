@@ -21,9 +21,9 @@
 							<img src="<c:url value="/assets/calories/white.svg"/>" class="w-4 h-4 md:w-6 md:h-6">
 							<span class="text-sm md:text-lg font-light">칼로리 검색하기</span>
 						</a>
-						<a href="<c:url value="/community"/>" class="flex flex-row gap-x-2 items-center bg-white text-black hover:bg-gray-50 px-6 py-3 shadow-sm rounded-xl">
-							<img src="<c:url value="/assets/community/black.svg"/>" class="w-4 h-4 md:w-6 md:h-6">
-							<span class="text-sm md:text-lg font-light">커뮤니티 둘러보기</span>
+						<a href="<c:url value="/recipe"/>" class="flex flex-row gap-x-2 items-center bg-white text-black hover:bg-gray-50 px-6 py-3 shadow-sm rounded-xl">
+							<img src="<c:url value="/assets/recipe/black.svg"/>" class="w-4 h-4 md:w-6 md:h-6" alt="레시피 아이콘">
+							<span class="text-sm md:text-lg font-light">레시피 둘러보기</span>
 						</a>
 					</div>
 				</section>
@@ -32,21 +32,16 @@
 						<span class="font-semibold text-3xl text-center text-balance">
 							<span class="text-[#FF2C00]">RecipeHub</span>의 기능
 						</span>
-						<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 justify-between w-full gap-4 py-6">
+						<div class="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-3 justify-between w-full gap-4 py-6">
 							<div class="bg-white shadow-sm rounded-2xl flex flex-col p-8 gap-y-4">
 								<img src="<c:url value="/assets/recipe/primary.svg"/>" class="w-12 h-12">
 								<span class="font-medium text-xl">레시피 공유</span>
-								<span class="text-gray-400 text-pretty">나만의 특별한 저칼로리 레시피를 커뮤니티와 함께 공유하세요.</span>
+								<span class="text-gray-400 text-pretty">나만의 특별한 저칼로리 레시피를 공유해 보세요.</span>
 							</div>
 							<div class="bg-white shadow-sm rounded-2xl flex flex-col p-8 gap-y-4">
 								<img src="<c:url value="/assets/calories/primary.svg"/>" class="w-12 h-12">
 								<span class="font-medium text-xl">칼로리 검색</span>
 								<span class="text-gray-400 text-pretty">정보가 궁금한 음식을 검색해 칼로리와 영양 정보를 확인하세요.</span>
-							</div>
-							<div class="bg-white shadow-sm rounded-2xl flex flex-col p-8 gap-y-4">
-								<img src="<c:url value="/assets/community/primary.svg"/>" class="w-12 h-12">
-								<span class="font-medium text-xl">커뮤니티</span>
-								<span class="text-gray-400 text-pretty">식단, 운동, 다이어트 경험을 다른 사람들과 나눠보세요.</span>
 							</div>
 							<div class="bg-white shadow-sm rounded-2xl flex flex-col p-8 gap-y-4">
 								<img src="<c:url value="/assets/announcement/primary.svg"/>" class="w-12 h-12">
