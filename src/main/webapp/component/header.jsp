@@ -1,5 +1,5 @@
 <%@ page import="java.util.Objects" %>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page pageEncoding="utf-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <div class="flex flex-row justify-center w-full h-16 bg-white shadow-sm">
 	<div class="flex flex-row justify-between w-full xl:w-295 h-full px-4 lg:px-8 xl:px-0">
@@ -22,9 +22,6 @@
 				</a>
 			<% } else { %>
 				<!-- 로그인 상태 -->
-				<a href="${pageContext.request.contextPath}/community" class="hover:bg-[#FA5F29] hover:text-white px-4 py-2 rounded-xl">
-					<span class="text-sm md:text-base">커뮤니티</span>
-				</a>
 				<a href="${pageContext.request.contextPath}/notice" class="hover:bg-[#FA5F29] hover:text-white px-4 py-2 rounded-xl">
 					<span class="text-sm md:text-base">공지사항</span>
 				</a>

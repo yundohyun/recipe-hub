@@ -44,7 +44,7 @@
 							</label>
 						</div>
 						<button type="submit" class="h-full bg-[#FF2C00] hover:bg-[#FA5F29] shadow-sm rounded-2xl py-2">
-							<span class="text-base text-white text-lg">가입하기</span>
+							<span class="text-base text-white text-lg">로그인</span>
 						</button>
 					</form>
 				</div>

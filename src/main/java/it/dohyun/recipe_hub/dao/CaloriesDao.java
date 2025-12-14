@@ -114,4 +114,14 @@ public class CaloriesDao {
     st.executeUpdate();
     DatabaseUtil.close(con, st);
   }
+
+  public int countCalories() throws SQLException, ClassNotFoundException {
+    Connection con = DatabaseUtil.getConnection();
+    PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM calories");
+    ResultSet rs = ps.executeQuery();
+    int c = 0;
+    if (rs.next()) c = rs.getInt(1);
+    DatabaseUtil.close(con, ps, rs);
+    return c;
+  }
 }

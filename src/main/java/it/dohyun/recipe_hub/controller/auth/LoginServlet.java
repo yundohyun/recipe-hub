@@ -1,6 +1,7 @@
 package it.dohyun.recipe_hub.controller.auth;
 
 import it.dohyun.recipe_hub.dao.MemberDao;
+import it.dohyun.recipe_hub.model.MemberDto;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.*;
 import jakarta.servlet.http.*;
@@ -45,6 +46,15 @@ public class LoginServlet extends HttpServlet {
       HttpSession session = req.getSession();
       session.setAttribute("loginId", memberId);
 
+      // --- 새로 추가: 멤버 정보를 읽어 isAdmin 플래그를 세션에 저장 ---
+      try {
+        MemberDto me = dao.getMember(memberId);
+        session.setAttribute("isAdmin", me != null && me.isAdmin());
+      } catch (SQLException | ClassNotFoundException e) {
+        logger.log(Level.WARNING, "로그인 후 멤버 정보 조회 중 오류", e);
+        // 실패 시 안전하게 false로 설정
+        session.setAttribute("isAdmin", false);
+      }
       // Session 영역의 loginId 값을 통해, 로그인 비로그인 구분
       resp.sendRedirect(req.getContextPath() + "/");
     } else {
