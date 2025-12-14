@@ -14,6 +14,7 @@
 		.avatar-hover:hover { transform: scale(1.04); }
 		/* toast animation */
 		#toast { transition: opacity .2s ease, transform .2s ease; }
+		@keyframes spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }
 	</style>
 </head>
 <body class="min-h-screen">
@@ -102,12 +103,22 @@
 				<div id="toast" class="fixed right-6 bottom-6 z-50 hidden">
 					<div id="toastInner" class="px-4 py-3 rounded-lg shadow-md bg-gray-800 text-white"></div>
 				</div>
+
+				<!-- Loading overlay (hidden by default) -->
+				<div id="loadingOverlayMy" class="fixed inset-0 z-50 hidden flex items-center justify-center" style="background: rgba(0,0,0,0.6);">
+					<div class="flex flex-col items-center gap-3">
+						<div class="loader" aria-hidden="true" style="width:48px;height:48px;border-radius:50%;border:5px solid rgba(255,255,255,0.15);border-top-color:white;animation:spin 1s linear infinite;"></div>
+						<div class="text-white text-md">저장 중...</div>
+					</div>
+				</div>
 			</section>
 		</div>
 	</div>
 </body>
 
 <script>
+  function showLoadingOverlayMy() { const o = document.getElementById('loadingOverlayMy'); if (o) o.classList.remove('hidden'); }
+  function hideLoadingOverlayMy() { const o = document.getElementById('loadingOverlayMy'); if (o) o.classList.add('hidden'); }
 	// Toast helper
 	function showToast(message, type = 'info', timeout = 3000) {
 		const toast = document.getElementById('toast');
@@ -206,6 +217,7 @@
 			if (!saveButton) return;
 			saveButton.disabled = true;
 			saveButton.classList.add('opacity-60', 'cursor-not-allowed');
+			showLoadingOverlayMy();
 
 			const currentPw = document.getElementById('currentPassword')?.value?.trim() || '';
 			const newPw = document.getElementById('newPassword')?.value?.trim() || '';
@@ -279,10 +291,11 @@
 				let msg = err?.message || '오류가 발생했습니다.';
 				showToast(msg, 'error');
 			} finally {
-				saveButton.disabled = false;
-				saveButton.classList.remove('opacity-60', 'cursor-not-allowed');
-			}
-		});
-	}
+					hideLoadingOverlayMy();
+					saveButton.disabled = false;
+					saveButton.classList.remove('opacity-60', 'cursor-not-allowed');
+				}
+			});
+		}
 </script>
 </html>

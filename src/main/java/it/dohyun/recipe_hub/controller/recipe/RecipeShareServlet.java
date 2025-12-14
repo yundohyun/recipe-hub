@@ -25,6 +25,17 @@ public class RecipeShareServlet extends HttpServlet {
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException {
+    // supply category options to the share form as well
+    java.util.Map<String, String> categories = new java.util.LinkedHashMap<>();
+    categories.put("etc", "기타");
+    categories.put("egg", "계란요리");
+    categories.put("street", "분식");
+    categories.put("soup", "국&탕");
+    categories.put("rice", "밥요리");
+    categories.put("pasta", "파스타");
+    categories.put("grill", "구이");
+    req.setAttribute("categories", categories);
+
     req.getRequestDispatcher("/recipe/share.jsp").forward(req, resp);
   }
 
@@ -42,14 +53,39 @@ public class RecipeShareServlet extends HttpServlet {
 
     String memberId = (String) session.getAttribute("loginId");
 
+    // Log all multipart parts for debugging (names, sizes, content types)
+    try {
+      Collection<Part> debugParts = req.getParts();
+      StringBuilder sb = new StringBuilder();
+      sb.append("Incoming multipart parts:\n");
+      for (Part p : debugParts) {
+        String pname = p.getName();
+        long psize = p.getSize();
+        String ptype = p.getContentType();
+        String cd = p.getHeader("content-disposition");
+        sb.append(
+            String.format("part name=%s, size=%d, type=%s, cd=%s\n", pname, psize, ptype, cd));
+      }
+      logger.log(Level.INFO, sb.toString());
+    } catch (Exception ex) {
+      logger.log(Level.FINE, "Unable to list multipart parts for debug", ex);
+    }
+
     String title = req.getParameter("title");
+    String description = req.getParameter("description");
+    String difficulty = req.getParameter("difficulty");
+    String category = req.getParameter("category");
     String serveStr = req.getParameter("serve");
     String durationStr = req.getParameter("duration");
     String caloriesId = req.getParameter("caloriesId");
 
+    // accept both common naming variants: 'ingredient[]' or 'ingredient'
     String[] ingredients = req.getParameterValues("ingredient[]");
+    if (ingredients == null) ingredients = req.getParameterValues("ingredient");
     String[] amounts = req.getParameterValues("amount[]");
+    if (amounts == null) amounts = req.getParameterValues("amount");
     String[] contents = req.getParameterValues("content[]");
+    if (contents == null) contents = req.getParameterValues("content");
 
     // basic validation
     if (title == null || title.isBlank()) {
@@ -61,8 +97,16 @@ public class RecipeShareServlet extends HttpServlet {
     int serve = 1;
     int duration = 0;
     try {
-      if (serveStr != null && !serveStr.isBlank()) serve = Integer.parseInt(serveStr);
-      if (durationStr != null && !durationStr.isBlank()) duration = Integer.parseInt(durationStr);
+      if (serveStr != null && !serveStr.isBlank()) {
+        // allow inputs like "2" or "2인분"
+        String digits = serveStr.replaceAll("[^0-9]", "");
+        if (!digits.isBlank()) serve = Integer.parseInt(digits);
+      }
+      if (durationStr != null && !durationStr.isBlank()) {
+        // allow inputs like "30" or "30분"
+        String digits = durationStr.replaceAll("[^0-9]", "");
+        if (!digits.isBlank()) duration = Integer.parseInt(digits);
+      }
     } catch (NumberFormatException nfe) {
       req.setAttribute("error", "인원수 또는 소요시간 형식이 잘못되었습니다.");
       req.getRequestDispatcher("/recipe/share.jsp").forward(req, resp);
@@ -81,9 +125,49 @@ public class RecipeShareServlet extends HttpServlet {
     recipe.setId(recipeId);
     recipe.setMemberId(memberId);
     recipe.setTitle(title);
+    recipe.setDescription(description);
+    recipe.setDifficulty(difficulty);
+    try {
+      if (category == null || category.isBlank()) {
+        recipe.setCategory(null);
+        java.util.Set<String> allowed = new java.util.HashSet<>(java.util.Arrays.asList("etc", "egg", "street", "soup", "rice", "pasta", "grill"));
+        if (!allowed.contains(category)) {
+          logger.log(java.util.logging.Level.WARNING, "Unknown category received: " + category + ". Falling back to 'etc'.");
+          recipe.setCategory(null);
+        } else {
+          recipe.setCategory(category);
+        }
+      }
+    } catch (Exception ex) {
+      logger.log(java.util.logging.Level.WARNING, "Error validating category, defaulting to etc", ex);
+      recipe.setCategory(null);
+    }
     recipe.setServe(serve);
     recipe.setDuration(duration);
     recipe.setViewCount(0);
+
+    // handle thumbnail upload (single part named 'thumbnail')
+    try {
+      Part thumbPart = req.getPart("thumbnail");
+      if (thumbPart != null && thumbPart.getSize() > 0) {
+        String submitted = getSubmittedFileName(thumbPart);
+        String ext = getFileExtension(submitted);
+        String filename = recipeId + "/thumbnail_" + System.currentTimeMillis() + ext;
+        try (InputStream is = thumbPart.getInputStream()) {
+          String publicUrl =
+              FirebaseStorageUtil.uploadFile(filename, is, thumbPart.getContentType());
+          if (publicUrl != null && !publicUrl.isBlank()) {
+            recipe.setThumbnail(publicUrl);
+          } else {
+            logger.log(Level.WARNING, "썸네일 업로드 후 publicUrl이 비어있습니다.");
+          }
+        } catch (Exception e) {
+          logger.log(Level.WARNING, "썸네일 업로드 중 오류", e);
+        }
+      }
+    } catch (IllegalStateException | IOException | ServletException ex) {
+      logger.log(Level.WARNING, "썸네일 처리 중 오류", ex);
+    }
 
     try {
       recipeDao.createRecipe(recipe);
@@ -115,15 +199,6 @@ public class RecipeShareServlet extends HttpServlet {
         }
       }
 
-      // handle images for contents: parts named contentImage[]
-      Collection<Part> parts = req.getParts();
-      List<Part> contentImageParts = new ArrayList<>();
-      for (Part p : parts) {
-        if (p.getName() != null && p.getName().equals("contentImage[]")) {
-          contentImageParts.add(p);
-        }
-      }
-
       // fetch created contents to map step -> id
       List<RecipeContentDto> createdContents = contentDao.getRecipeContents(recipeId);
       Map<Integer, String> stepToContentId = new HashMap<>();
@@ -131,32 +206,53 @@ public class RecipeShareServlet extends HttpServlet {
         if (cd.getStep() != null) stepToContentId.put(cd.getStep(), cd.getId());
       }
 
-      for (int i = 0; i < contentImageParts.size(); i++) {
-        Part imgPart = contentImageParts.get(i);
-        if (imgPart == null || imgPart.getSize() == 0) continue;
-        int step = i + 1; // assume order corresponds to steps
+      // For each created step (in ascending order), look for a multipart part named
+      // contentImage_<step>
+      int handledImages = 0;
+      List<Integer> steps = new ArrayList<>(stepToContentId.keySet());
+      Collections.sort(steps);
+      logger.log(Level.INFO, "Processing content images for steps=" + steps);
+      for (Integer step : steps) {
         String contentId = stepToContentId.get(step);
-        if (contentId == null) continue;
-
-        String submitted = getSubmittedFileName(imgPart);
-        String ext = getFileExtension(submitted);
-        String filename = recipeId + "/content_" + step + "_" + System.currentTimeMillis() + ext;
-        try (InputStream is = imgPart.getInputStream()) {
-          String publicUrl = FirebaseStorageUtil.uploadFile(filename, is, imgPart.getContentType());
-          // store image URL directly to recipe_content_image
-          if (publicUrl == null || publicUrl.isBlank()) {
-            logger.log(Level.WARNING, "이미지 업로드 후 publicUrl이 비어있습니다. content step=" + step);
-          } else {
-            RecipeContentImageDto mapping = new RecipeContentImageDto();
-            mapping.setRecipeContentId(contentId);
-            mapping.setImageUrl(publicUrl);
-            contentImageDao.createRecipeContentImage(mapping);
+        try {
+          Part imgPart = null;
+          try {
+            imgPart = req.getPart("contentImage_" + step);
+          } catch (IllegalStateException | IOException | ServletException ignore) {
+            // will be handled below
           }
-        } catch (Exception e) {
-          logger.log(Level.WARNING, "이미지 업로드 중 오류 발생", e);
-          // continue processing other images
+          if (imgPart == null || imgPart.getSize() == 0) {
+            logger.log(Level.FINE, "No content image part for step=" + step);
+            continue;
+          }
+
+          String submitted = getSubmittedFileName(imgPart);
+          String ext = getFileExtension(submitted);
+          String filename = recipeId + "/content_" + step + "_" + System.currentTimeMillis() + ext;
+          try (InputStream is = imgPart.getInputStream()) {
+            String publicUrl =
+                FirebaseStorageUtil.uploadFile(filename, is, imgPart.getContentType());
+            if (publicUrl == null || publicUrl.isBlank()) {
+              logger.log(Level.WARNING, "이미지 업로드 후 publicUrl이 비어있습니다. content step=" + step);
+            } else {
+              RecipeContentImageDto mapping = new RecipeContentImageDto();
+              mapping.setRecipeContentId(contentId);
+              mapping.setImageUrl(publicUrl);
+              contentImageDao.createRecipeContentImage(mapping);
+              handledImages++;
+              logger.log(
+                  Level.INFO, "Uploaded content image for step=" + step + " -> " + publicUrl);
+            }
+          }
+        } catch (IllegalStateException | IOException | ServletException ex) {
+          logger.log(Level.WARNING, "content image 처리 중 오류 step=" + step, ex);
+        } catch (Exception ex) {
+          logger.log(Level.WARNING, "이미지 업로드 중 오류 발생 for step=" + step, ex);
         }
       }
+      logger.log(
+          Level.INFO,
+          "Handled content images=" + handledImages + ", createdSteps=" + stepToContentId.size());
 
       // calories mapping
       if (caloriesId != null && !caloriesId.isBlank()) {

@@ -45,4 +45,18 @@ public class RecipeLikeDao {
     ps.executeUpdate();
     DatabaseUtil.close(con, ps);
   }
+
+  public int countLikesByRecipeId(String recipeId) throws SQLException, ClassNotFoundException {
+    Connection con = DatabaseUtil.getConnection();
+    PreparedStatement ps =
+        con.prepareStatement("select count(*) as cnt from recipe_like where recipe_id = ?");
+    ps.setString(1, recipeId);
+    ResultSet rs = ps.executeQuery();
+    int cnt = 0;
+    if (rs.next()) {
+      cnt = rs.getInt("cnt");
+    }
+    DatabaseUtil.close(con, ps, rs);
+    return cnt;
+  }
 }
