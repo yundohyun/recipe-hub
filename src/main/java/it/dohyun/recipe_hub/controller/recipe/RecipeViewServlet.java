@@ -39,6 +39,26 @@ public class RecipeViewServlet extends HttpServlet {
         return;
       }
 
+      // Increment view count once per session to avoid duplicates on refresh
+      HttpSession session = req.getSession();
+      @SuppressWarnings("unchecked")
+      Set<String> viewed = (Set<String>) session.getAttribute("viewedRecipes");
+      if (viewed == null) {
+        viewed = new HashSet<>();
+        session.setAttribute("viewedRecipes", viewed);
+      }
+      if (!viewed.contains(id)) {
+        try {
+          // increment stored view count and update DTO
+          recipeDao.addViewCount(id);
+          Integer vc = recipe.getViewCount();
+          recipe.setViewCount((vc == null ? 0 : vc) + 1);
+        } catch (SQLException | ClassNotFoundException ex) {
+          logger.log(Level.WARNING, "view count increment failed for id=" + id, ex);
+        }
+        viewed.add(id);
+      }
+
       List<RecipeIngredientDto> ingredients = ingredientDao.getRecipeIngredientsByRecipeId(id);
       List<RecipeContentDto> contents = contentDao.getRecipeContents(id);
 
