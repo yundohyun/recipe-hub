@@ -69,7 +69,7 @@
 
               <div class="space-y-2">
                 <label for="category" class="text-sm font-semibold text-foreground">카테고리</label>
-                <select id="category" name="category" class="w-full rounded-md border border-border px-3 py-2 bg-input">
+                <select id="category" name="category" required class="w-full rounded-md border border-border px-3 py-2 bg-input">
                   <option value="etc">기타</option>
                   <option value="egg">계란요리</option>
                   <option value="street">분식</option>
@@ -211,8 +211,28 @@
       </form>
     </div>
 
+    <!-- Loading overlay (hidden by default) -->
+    <div id="loadingOverlayShare" class="fixed inset-0 z-50 hidden flex items-center justify-center" style="background: rgba(0,0,0,0.6);">
+      <div class="flex flex-col items-center gap-3">
+        <div class="loader" aria-hidden="true" style="width:64px;height:64px;border-radius:50%;border:6px solid rgba(255,255,255,0.15);border-top-color:white;animation:spin 1s linear infinite;"></div>
+        <div class="text-white text-lg">업로드 중...</div>
+      </div>
+    </div>
+
+    <style>
+      @keyframes spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }
+    </style>
+
     <script>
       // thumbnail preview and click proxy
+      function showLoadingOverlayShare() {
+        const o = document.getElementById('loadingOverlayShare');
+        if (o) o.classList.remove('hidden');
+      }
+      function hideLoadingOverlayShare() {
+        const o = document.getElementById('loadingOverlayShare');
+        if (o) o.classList.add('hidden');
+      }
       const thumbnailInput = document.getElementById('thumbnailInput');
       const thumbnailPreview = document.getElementById('thumbnailPreview');
       // label already uses 'for="thumbnailInput"' — no extra click proxy to avoid double dialog
@@ -305,30 +325,58 @@
          attachContentImagePreview(inp);
        });
 
-      // Debug: on submit log FormData keys and file entries to console to debug upload issues
+      // Intercept form submit and upload via fetch so we can show a success alert and redirect
       const shareForm = document.getElementById('shareForm');
       if (shareForm) {
-        shareForm.addEventListener('submit', function () {
-          try {
-            const fd = new FormData(shareForm);
-            console.group('shareForm FormData');
-            for (const key of fd.keys()) {
-              const values = fd.getAll(key);
-              values.forEach((v, idx) => {
-                if (v instanceof File) {
-                  console.log(key + '[' + idx + ']: File ' + v.name + ' (' + v.size + ' bytes) type=' + v.type);
-                } else {
-                  console.log(key + '[' + idx + ']:', v);
-                }
-              });
+        shareForm.addEventListener('submit', async function (e) {
+          e.preventDefault();
+          showLoadingOverlayShare();
+          const submitBtn = shareForm.querySelector('button[type="submit"]');
+           // preserve original button content
+           const origHtml = submitBtn ? submitBtn.innerHTML : null;
+           if (submitBtn) {
+             submitBtn.disabled = true;
+             submitBtn.innerHTML = '업로드 중...';
+           }
+           try {
+             const fd = new FormData(shareForm);
+             const response = await fetch(shareForm.action, {
+               method: 'POST',
+               body: fd,
+               credentials: 'same-origin'
+             });
+
+            // If server redirected, fetch will follow; response.url will differ from the request URL
+            const requestedUrl = new URL(shareForm.action, location.origin).href;
+            if (response.redirected || (response.url && response.url !== requestedUrl)) {
+              alert('레시피 업로드가 완료되었습니다.');
+              // go to recipe list page
+              window.location.href = '${pageContext.request.contextPath}/recipe';
+              return;
             }
-            console.groupEnd();
-          } catch (err) {
-            console.error('FormData debug error', err);
-          }
-          // allow normal submit to proceed
-        });
-      }
+
+            // If no redirect, try to inspect response text for an error (server forwards back to share.jsp on error)
+            const text = await response.text();
+            // simple heuristic: if returned HTML contains '레시피 생성 중 오류' or 'error', show it.
+            if (/레시피 생성 중 오류|error/i.test(text)) {
+              alert('레시피 생성 중 오류가 발생했습니다. 내용을 확인해주세요.');
+            } else {
+              // Fallback: assume success (some servers may return 200 with page content)
+              alert('레시피 업로드가 완료되었습니다.');
+              window.location.href = '${pageContext.request.contextPath}/recipe';
+            }
+           } catch (err) {
+             console.error('Upload error', err);
+             alert('업로드 중 오류가 발생했습니다. 네트워크 또는 서버 상태를 확인하세요.');
+           } finally {
+             hideLoadingOverlayShare();
+             if (submitBtn) {
+               submitBtn.disabled = false;
+               submitBtn.innerHTML = origHtml;
+             }
+           }
+         });
+       }
     </script>
   </body>
 </html>
