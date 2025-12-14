@@ -17,11 +17,11 @@
 						음식에 관련된 다양한 경험과 저칼로리 레시피를 서로 나눠보세요.
 					</span>
 					<div class="flex flex-row w-fit gap-x-4">
-						<a href="<c:url value="/community"/>" class="flex flex-row gap-x-2 items-center bg-[#FF2C00] text-white hover:bg-[#FA5F29] px-6 py-3 shadow-sm rounded-xl">
+						<a href="<c:url value="/calories"/>" class="flex flex-row gap-x-2 items-center bg-[#FF2C00] text-white hover:bg-[#FA5F29] px-6 py-3 shadow-sm rounded-xl">
 							<img src="<c:url value="/assets/calories/white.svg"/>" class="w-4 h-4 md:w-6 md:h-6">
 							<span class="text-sm md:text-lg font-light">칼로리 검색하기</span>
 						</a>
-						<a href="<c:url value="/recipe"/>" class="flex flex-row gap-x-2 items-center bg-white text-black hover:bg-gray-50 px-6 py-3 shadow-sm rounded-xl">
+						<a href="<c:url value="/community"/>" class="flex flex-row gap-x-2 items-center bg-white text-black hover:bg-gray-50 px-6 py-3 shadow-sm rounded-xl">
 							<img src="<c:url value="/assets/community/black.svg"/>" class="w-4 h-4 md:w-6 md:h-6">
 							<span class="text-sm md:text-lg font-light">커뮤니티 둘러보기</span>
 						</a>
