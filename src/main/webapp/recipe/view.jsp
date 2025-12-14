@@ -21,7 +21,12 @@
                    <img src="${recipe.thumbnail}" alt="${recipe.title}" class="w-full h-full object-cover rounded-xl" />
                  </c:when>
                  <c:otherwise>
-                   <div class="text-9xl">🥚</div>
+                   <div class="w-full h-full bg-gray-100 flex items-center justify-center">
+                     <svg class="w-24 h-24 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7" />
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7a4 4 0 118 0" />
+                     </svg>
+                   </div>
                  </c:otherwise>
                </c:choose>
              </div>
@@ -40,12 +45,12 @@
                   <!-- Category badge -->
                   <c:if test="${not empty recipe.category}">
                     <div class="mt-3">
-                      <span class="inline-block px-3 py-1 rounded-full bg-muted text-sm font-medium">
+                      <span class="inline-flex whitespace-nowrap items-center gap-1 px-3 py-1 rounded-full bg-muted text-sm font-medium">
                         <c:choose>
                           <c:when test="${recipe.category == 'etc'}">카테고리: 기타</c:when>
                           <c:when test="${recipe.category == 'egg'}">카테고리: 계란요리</c:when>
                           <c:when test="${recipe.category == 'street'}">카테고리: 분식</c:when>
-                          <c:when test="${recipe.category == 'soup'}">카테고리: 국&탕</c:when>
+                          <c:when test="${recipe.category == 'soup'}">카테고리: 국&amp;탕</c:when>
                           <c:when test="${recipe.category == 'rice'}">카테고리: 밥요리</c:when>
                           <c:when test="${recipe.category == 'pasta'}">카테고리: 파스타</c:when>
                           <c:when test="${recipe.category == 'grill'}">카테고리: 구이</c:when>

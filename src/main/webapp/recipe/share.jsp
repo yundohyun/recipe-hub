@@ -73,7 +73,7 @@
                   <option value="etc">기타</option>
                   <option value="egg">계란요리</option>
                   <option value="street">분식</option>
-                  <option value="soup">국&탕</option>
+                  <option value="soup">국&amp;탕</option>
                   <option value="rice">밥요리</option>
                   <option value="pasta">파스타</option>
                   <option value="grill">구이</option>
