@@ -25,6 +25,17 @@ public class RecipeShareServlet extends HttpServlet {
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException {
+    // supply category options to the share form as well
+    java.util.Map<String, String> categories = new java.util.LinkedHashMap<>();
+    categories.put("etc", "기타");
+    categories.put("egg", "계란요리");
+    categories.put("street", "분식");
+    categories.put("soup", "국&탕");
+    categories.put("rice", "밥요리");
+    categories.put("pasta", "파스타");
+    categories.put("grill", "구이");
+    req.setAttribute("categories", categories);
+
     req.getRequestDispatcher("/recipe/share.jsp").forward(req, resp);
   }
 
