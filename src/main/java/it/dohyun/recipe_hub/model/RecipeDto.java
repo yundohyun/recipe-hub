@@ -13,6 +13,7 @@ public class RecipeDto {
   private String thumbnail;
   private String description;
   private String difficulty;
+  private String category;
   private LocalDateTime created;
   private LocalDateTime updated;
 
@@ -88,6 +89,15 @@ public class RecipeDto {
     this.difficulty = difficulty;
   }
 
+  public String getCategory() {
+    return category;
+  }
+
+  public void setCategory(String category) {
+    // enforce non-null at DTO level
+    this.category = (category == null || category.trim().isEmpty()) ? "etc" : category;
+  }
+
   public LocalDateTime getCreated() {
     return created;
   }
@@ -125,6 +135,7 @@ public class RecipeDto {
     json.put("thumbnail", thumbnail);
     json.put("description", description);
     json.put("difficulty", difficulty);
+    json.put("category", category);
     json.put("serve", serve);
     json.put("duration", duration);
     json.put("viewCount", viewCount);
