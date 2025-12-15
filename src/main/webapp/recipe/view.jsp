@@ -12,7 +12,7 @@
       <c:choose>
         <c:when test="${not empty recipe}">
           <!-- widened container for desktop -->
-					<div class="max-h-6xl flex flex-col w-full xl:w-295 h-full px-4 lg:px-8 xl:px-0">
+				<div class="max-h-6xl flex flex-col w-full xl:w-295 h-full px-4 lg:px-8 xl:px-0">
 
             <!-- Hero -->
             <div class="mt-12 h-72 md:h-96 lg:h-[28rem] bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl flex items-center justify-center text-9xl mb-8 border border-border overflow-hidden relative">
@@ -197,13 +197,47 @@
               <!-- Right: nutrition card (span 4) -->
               <aside class="lg:col-span-4">
                 <div class="lg:sticky lg:top-24">
-                  <h2 class="text-xl font-semibold text-foreground mb-4">영양 정보 (1인분)</h2>
-                  <div class="bg-white rounded-xl border border-border shadow-sm p-6 space-y-3">
-                    <div class="flex justify-between items-center pb-3 border-b"><span class="text-muted-foreground">칼로리</span><span class="font-bold text-foreground text-lg"><c:choose><c:when test="${not empty recipeCalories}"><c:out value="${recipeCalories.calories}"/></c:when><c:otherwise>—</c:otherwise></c:choose></span></div>
-                    <div class="flex justify-between items-center pb-3 border-b"><span class="text-muted-foreground">단백질</span><span class="font-bold text-foreground"><c:choose><c:when test="${not empty recipeCalories}"><c:out value="${recipeCalories.protein}"/></c:when><c:otherwise>—</c:otherwise></c:choose></span></div>
-                    <div class="flex justify-between items-center pb-3 border-b"><span class="text-muted-foreground">탄수화물</span><span class="font-bold text-foreground"><c:choose><c:when test="${not empty recipeCalories}"><c:out value="${recipeCalories.carbohydrates}"/></c:when><c:otherwise>—</c:otherwise></c:choose></span></div>
-                    <div class="flex justify-between items-center pb-3 border-b"><span class="text-muted-foreground">지방</span><span class="font-bold text-foreground"><c:choose><c:when test="${not empty recipeCalories}"><c:out value="${recipeCalories.fat}"/></c:when><c:otherwise>—</c:otherwise></c:choose></span></div>
-                    <div class="flex justify-between items-center"><span class="text-muted-foreground">식이섬유</span><span class="font-bold text-foreground"><c:choose><c:when test="${not empty recipeCalories}"><c:out value="${recipeCalories.fiber}"/></c:when><c:otherwise>—</c:otherwise></c:choose></span></div>
+                  <h2 class="text-lg font-semibold text-foreground mb-3">영양 정보 (1인분)</h2>
+
+                  <!-- Compact nutrition list: show up to 5 related nutrition items in small cards -->
+                  <div class="grid grid-cols-1 gap-2">
+                    <c:choose>
+                      <c:when test="${not empty recipeCaloriesList}">
+                        <div class="grid grid-cols-1 gap-2">
+                          <c:forEach items="${recipeCaloriesList}" var="cal" varStatus="st">
+                            <c:if test="${st.index < 5}">
+                              <div class="bg-white rounded-lg border border-border shadow-sm p-2 flex items-center justify-between text-xs">
+                                <div>
+                                  <div class="font-medium text-sm"><c:out value="${cal.name}"/></div>
+                                  <div class="text-muted-foreground text-xxs">1회: <c:out value="${cal.serve}"/></div>
+                                </div>
+                                <div class="text-right">
+                                  <div class="font-semibold text-sm"><c:out value="${cal.calories}"/> kcal</div>
+                                  <div class="text-muted-foreground text-xxs">P <c:out value="${cal.protein}"/>g • F <c:out value="${cal.fat}"/>g</div>
+                                </div>
+                              </div>
+                            </c:if>
+                          </c:forEach>
+                        </div>
+                      </c:when>
+                      <c:when test="${not empty recipeCalories}">
+                        <div class="bg-white rounded-lg border border-border shadow-sm p-2 text-sm">
+                          <div class="flex items-center justify-between">
+                            <div>
+                              <div class="font-medium"><c:out value="${recipeCalories.name}"/></div>
+                              <div class="text-muted-foreground text-xs">1회: <c:out value="${recipeCalories.serve}"/></div>
+                            </div>
+                            <div class="text-right">
+                              <div class="font-semibold"><c:out value="${recipeCalories.calories}"/> kcal</div>
+                              <div class="text-muted-foreground text-xs">P <c:out value="${recipeCalories.protein}"/>g • F <c:out value="${recipeCalories.fat}"/>g</div>
+                            </div>
+                          </div>
+                        </div>
+                      </c:when>
+                      <c:otherwise>
+                        <div class="bg-white rounded-lg border border-border shadow-sm p-3 text-sm text-center text-muted-foreground">등록된 연관 칼로리 정보가 없습니다.</div>
+                      </c:otherwise>
+                    </c:choose>
                   </div>
 
                   <div class="mt-6">
