@@ -1,9 +1,17 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <html>
   <head>
     <title><c:out value="${recipe.title}"/> - RecipeHub</title>
     <%@ include file="/component/head.jsp" %>
+    <style>
+      /* like button visuals: outline by default, filled when parent has .liked */
+      .like-icon { width: 28px; height: 28px; display: block; }
+      .like-icon path { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      button[aria-label="like-recipe"].liked { color: #ef4444; }
+      button[aria-label="like-recipe"].liked .like-icon path { fill: #ef4444; stroke: none; }
+    </style>
   </head>
   <body class="min-h-screen bg-gray-50 text-slate-900">
     <div class="w-full min-h-screen flex flex-col items-center">
@@ -62,12 +70,12 @@
                 </div>
 
                 <div class="flex flex-col items-center gap-3">
-                  <button class="flex flex-col items-center gap-1 p-3 rounded-lg hover:bg-muted transition-colors bg-white border">
-                    <!-- heart icon -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 text-muted-foreground">
-                      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+                  <button class="flex flex-col items-center gap-1 p-3 rounded-lg hover:bg-muted transition-colors bg-white border ${liked ? 'liked' : ''}" aria-label="like-recipe">
+                    <!-- unified heart SVG: CSS will color/ fill when button has .liked -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-7 h-7 like-icon" aria-hidden="true">
+                      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
                     </svg>
-                    <span class="text-sm font-semibold text-foreground"><c:out value="${likeCount}"/></span>
+                    <span class="text-sm font-semibold text-foreground like-count"><c:out value="${likeCount}"/></span>
                   </button>
                   <a href="${pageContext.request.contextPath}/recipe/edit?id=${recipe.id}" class="text-sm text-primary hover:underline">수정</a>
                 </div>
@@ -240,27 +248,90 @@
                     </c:choose>
                   </div>
 
-                  <div class="mt-6">
-                    <button class="w-full bg-primary text-primary-foreground rounded-md py-3 font-medium">레시피 저장</button>
-                  </div>
-                </div>
-              </aside>
+                  <!-- DEBUG PANEL: show helpful server-side values when ?debug=true -->
+                  <c:if test="${param.debug == 'true'}">
+                    <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded p-4 text-sm text-slate-800">
+                      <h4 class="font-semibold mb-2">DEBUG: 서버 전달 데이터</h4>
+                      <pre style="white-space:pre-wrap;">Recipe: id=${recipe.id}
+title=${recipe.title}
+category=${recipe.category}
+serve=${recipe.serve}
+duration=${recipe.duration}
+thumbnail=${recipe.thumbnail}
+description=${recipe.description}</pre>
 
+                      <h5 class="mt-2 font-medium">Primary calories (recipeCalories)</h5>
+                      <c:choose>
+                        <c:when test="${not empty recipeCalories}">
+                          <pre>name=${recipeCalories.name}
+calories=${recipeCalories.calories}
+protein=${recipeCalories.protein}
+fat=${recipeCalories.fat}
+carbohydrates=${recipeCalories.carbohydrates}
+serve=${recipeCalories.serve}</pre>
+                        </c:when>
+                        <c:otherwise>
+                          <pre>primary calories: null</pre>
+                        </c:otherwise>
+                      </c:choose>
+
+                      <h5 class="mt-2 font-medium">Calories list (recipeCaloriesList) count: ${fn:length(recipeCaloriesList)}</h5>
+                      <c:forEach items="${recipeCaloriesList}" var="cidx" varStatus="s">
+                        <pre>[${s.index}] name=${cidx.name} | kcal=${cidx.calories} | protein=${cidx.protein} | fat=${cidx.fat} | carbs=${cidx.carbohydrates}</pre>
+                      </c:forEach>
+
+                      <h5 class="mt-2 font-medium">Ingredients (${fn:length(ingredients)})</h5>
+                      <c:forEach items="${ingredients}" var="ing" varStatus="is">
+                        <pre>[${is.index}] ${ing.ingredient} — ${ing.amount}</pre>
+                      </c:forEach>
+
+                      <h5 class="mt-2 font-medium">Contents (${fn:length(contents)})</h5>
+                      <c:forEach items="${contents}" var="ct" varStatus="cs">
+                        <pre>[${cs.index}] step=${ct.step} — ${ct.content}</pre>
+                      </c:forEach>
+                    </div>
+                  </c:if>
+
+                 </div>
+               </aside>
+              <script>
+                (function(){
+                  const likeBtn = document.querySelector('button[aria-label="like-recipe"]');
+                  const likeCountEl = likeBtn ? likeBtn.querySelector('.like-count') : null;
+                  if (!likeBtn) return;
+                  const recipeId = '${recipe.id}';
+                  likeBtn.addEventListener('click', async function(e){
+                    e.preventDefault();
+                    try {
+                      const res = await fetch('${pageContext.request.contextPath}/recipe/like', {
+                        method: 'POST',
+                        headers: {'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+                        body: 'recipeId=' + encodeURIComponent(recipeId)
+                      });
+                      if (!res.ok) {
+                        if (res.status === 401) { alert('로그인 후 좋아요를 눌러주세요.'); return; }
+                        throw new Error('like failed');
+                      }
+                      const json = await res.json();
+                      if (likeCountEl) likeCountEl.textContent = json.likeCount;
+                      // toggle filled style
+                      if (json.liked) likeBtn.classList.add('liked'); else likeBtn.classList.remove('liked');
+                    } catch(err) { console.error(err); alert('좋아요 처리 중 오류가 발생했습니다.'); }
+                  });
+                })();
+              </script>
+          </div>
+        </c:when>
+        <c:otherwise>
+          <div class="max-w-4xl w-full mx-auto px-4 py-8">
+            <div class="bg-white rounded-xl p-8 shadow-md text-center">
+              <h2 class="text-2xl font-bold mb-4">레시피를 찾을 수 없습니다.</h2>
+              <p class="text-gray-600">요청하신 레시피가 존재하지 않거나 서버에서 데이터를 가져오지 못했습니다.</p>
+              <a href="${pageContext.request.contextPath}/recipe" class="mt-4 inline-block bg-primary text-primary-foreground px-4 py-2 rounded">레시피 목록으로</a>
             </div>
-
-           </div>
-         </c:when>
-         <c:otherwise>
-           <div class="max-w-4xl w-full mx-auto px-4 py-8">
-             <div class="bg-white rounded-xl p-8 shadow-md text-center">
-               <h2 class="text-2xl font-bold mb-4">레시피를 찾을 수 없습니다.</h2>
-               <p class="text-gray-600">요청하신 레시피가 존재하지 않거나 서버에서 데이터를 가져오지 못했습니다.</p>
-               <a href="${pageContext.request.contextPath}/recipe" class="mt-4 inline-block bg-primary text-primary-foreground px-4 py-2 rounded">레시피 목록으로</a>
-             </div>
-           </div>
-         </c:otherwise>
-       </c:choose>
-
-     </div>
-   </body>
- </html>
+          </div>
+        </c:otherwise>
+      </c:choose>
+    </div>
+  </body>
+</html>

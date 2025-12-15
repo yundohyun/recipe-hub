@@ -99,6 +99,39 @@
 						</div>
 					</form>
 				</div>
+				<!-- Liked recipes -->
+				<div class="w-full max-w-5xl bg-white rounded-2xl shadow-sm px-10 py-8 mt-6">
+					<h3 class="text-xl font-semibold mb-4">좋아요한 레시피</h3>
+					<c:choose>
+						<c:when test="${not empty likedRecipes}">
+							<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+								<c:forEach items="${likedRecipes}" var="lr" varStatus="s">
+									<div class="border rounded-lg overflow-hidden bg-white shadow-sm">
+										<a href="${pageContext.request.contextPath}/recipe/view?id=${lr.id}" class="block">
+											<div class="w-full h-40 bg-gray-100 overflow-hidden">
+												<c:choose>
+													<c:when test="${not empty lr.thumbnail}">
+														<img src="${lr.thumbnail}" alt="${lr.title}" class="w-full h-full object-cover" />
+													</c:when>
+													<c:otherwise>
+														<div class="w-full h-full flex items-center justify-center text-gray-400">No image</div>
+													</c:otherwise>
+												</c:choose>
+											</div>
+											<div class="p-3">
+												<div class="font-medium text-sm text-foreground truncate">${lr.title}</div>
+												<div class="text-xs text-muted-foreground mt-1">${lr.serve}인분 · ${lr.duration}분</div>
+											</div>
+										</a>
+									</div>
+								</c:forEach>
+							</div>
+						</c:when>
+						<c:otherwise>
+							<div class="text-sm text-muted-foreground">좋아요한 레시피가 없습니다.</div>
+						</c:otherwise>
+					</c:choose>
+				</div>
 				<!-- Toast -->
 				<div id="toast" class="fixed right-6 bottom-6 z-50 hidden">
 					<div id="toastInner" class="px-4 py-3 rounded-lg shadow-md bg-gray-800 text-white"></div>
