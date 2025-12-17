@@ -13,7 +13,14 @@
         <section class="w-full bg-white rounded-2xl p-8 shadow-md">
           <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-semibold">레시피</h1>
-            <a href="${pageContext.request.contextPath}/recipe/share" class="bg-[#FF2C00] hover:bg-[#e02a00] text-white px-4 py-2 rounded-lg shadow-sm">레시피 공유</a>
+            <c:choose>
+              <c:when test="${not empty sessionScope.loginId}">
+                <a href="${pageContext.request.contextPath}/recipe/share" class="bg-[#FF2C00] hover:bg-[#e02a00] text-white px-4 py-2 rounded-lg shadow-sm">레시피 공유</a>
+              </c:when>
+              <c:otherwise>
+                <a href="${pageContext.request.contextPath}/login.jsp" class="bg-[#F3F4F6] text-gray-700 px-4 py-2 rounded-lg border">로그인 후 공유</a>
+              </c:otherwise>
+            </c:choose>
           </div>
 
           <!-- Compact control bar: search + category -->

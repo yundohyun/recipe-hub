@@ -7,7 +7,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,6 +44,13 @@ public class RecipeShareServlet extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 		throws ServletException, IOException {
+		// require login to view the share form
+		HttpSession session = req.getSession(false);
+		if (session == null || session.getAttribute("loginId") == null) {
+			// redirect to login page
+			resp.sendRedirect(req.getContextPath() + "/login.jsp");
+			return;
+		}
 		// supply category options to the share form as well
 		java.util.Map<String, String> categories = new java.util.LinkedHashMap<>();
 		categories.put("etc", "기타");

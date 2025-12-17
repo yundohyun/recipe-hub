@@ -75,14 +75,21 @@
                 </div>
 
                 <div class="flex flex-col items-center gap-3">
-                  <button class="flex flex-col items-center gap-1 p-3 rounded-lg hover:bg-muted transition-colors bg-white border ${liked ? 'liked' : ''}" aria-label="like-recipe">
-                    <!-- unified heart SVG: CSS will color/ fill when button has .liked -->
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-7 h-7 like-icon" aria-hidden="true">
-                      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                    </svg>
-                    <span class="text-sm font-semibold text-foreground like-count"><c:out value="${likeCount}"/></span>
-                  </button>
-                  <a href="${pageContext.request.contextPath}/recipe/edit?id=${recipe.id}" class="text-sm text-primary hover:underline">수정</a>
+                  <c:choose>
+                    <c:when test="${not empty sessionScope.loginId}">
+                      <button class="flex flex-col items-center gap-1 p-3 rounded-lg hover:bg-muted transition-colors bg-white border ${liked ? 'liked' : ''}" aria-label="like-recipe">
+                        <!-- unified heart SVG: CSS will color/ fill when button has .liked -->
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-7 h-7 like-icon" aria-hidden="true">
+                          <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                        </svg>
+                        <span class="text-sm font-semibold text-foreground like-count"><c:out value="${likeCount}"/></span>
+                      </button>
+<%--                      <a href="${pageContext.request.contextPath}/recipe/edit?id=${recipe.id}" class="text-sm text-primary hover:underline">수정</a>--%>
+                    </c:when>
+                    <c:otherwise>
+<%--                      <a href="${pageContext.request.contextPath}/login.jsp" class="text-sm text-muted-foreground px-3 py-2 border rounded">로그인 후 이용</a>--%>
+                    </c:otherwise>
+                  </c:choose>
                 </div>
               </div>
 
