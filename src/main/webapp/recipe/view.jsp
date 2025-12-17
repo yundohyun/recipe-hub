@@ -11,6 +11,11 @@
       .like-icon path { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
       button[aria-label="like-recipe"].liked { color: #ef4444; }
       button[aria-label="like-recipe"].liked .like-icon path { fill: #ef4444; stroke: none; }
+
+      /* simple modal for image enlarge */
+      .img-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display:none; align-items:center; justify-content:center; z-index:9999; }
+      .img-modal-overlay.open { display:flex; }
+      .img-modal-overlay img { max-width: calc(100% - 40px); max-height: calc(100% - 40px); border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.6); }
     </style>
   </head>
   <body class="min-h-screen bg-gray-50 text-slate-900">
@@ -26,7 +31,7 @@
             <div class="mt-12 h-72 md:h-96 lg:h-[28rem] bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl flex items-center justify-center text-9xl mb-8 border border-border overflow-hidden relative">
                <c:choose>
                  <c:when test="${not empty recipe.thumbnail}">
-                   <img src="${recipe.thumbnail}" alt="${recipe.title}" class="w-full h-full object-cover rounded-xl" />
+                   <img src="${recipe.thumbnail}" alt="${recipe.title}" class="w-full h-full object-cover rounded-xl" data-enlargeable="true" style="cursor:zoom-in;" />
                  </c:when>
                  <c:otherwise>
                    <div class="w-full h-full bg-gray-100 flex items-center justify-center">
@@ -168,7 +173,7 @@
                             <span class="font-medium text-primary text-sm">
                               <c:choose>
                                 <c:when test="${not empty ing.amount}"><c:out value="${ing.amount}"/></c:when>
-                                <c:otherwise>&nbsp;</c:otherwise>
+                                <c:otherwise>-</c:otherwise>
                               </c:choose>
                             </span>
                           </div>
@@ -190,7 +195,7 @@
                           <c:if test="${not empty contentImages[step.id]}">
                             <div class="flex gap-3 mt-4 flex-wrap">
                               <c:forEach items="${contentImages[step.id]}" var="img">
-                                <img src="${img}" alt="step image" class="w-36 h-36 object-cover rounded" />
+                                <img src="${img}" alt="step image" class="w-36 h-36 object-cover rounded" data-enlargeable="true" style="cursor:zoom-in;" />
                               </c:forEach>
                             </div>
                           </c:if>
@@ -318,6 +323,39 @@ serve=${recipeCalories.serve}</pre>
                       if (json.liked) likeBtn.classList.add('liked'); else likeBtn.classList.remove('liked');
                     } catch(err) { console.error(err); alert('좋아요 처리 중 오류가 발생했습니다.'); }
                   });
+                })();
+              </script>
+
+              <!-- Image enlarge modal + behavior -->
+              <div id="img-modal" class="img-modal-overlay" role="dialog" aria-hidden="true">
+                <img id="img-modal-img" src="" alt="enlarged image" />
+              </div>
+
+              <script>
+                (function(){
+                  const modal = document.getElementById('img-modal');
+                  const modalImg = document.getElementById('img-modal-img');
+                  function openModal(src, alt){
+                    modalImg.src = src;
+                    if(alt) modalImg.alt = alt;
+                    modal.classList.add('open');
+                    modal.setAttribute('aria-hidden','false');
+                    document.body.style.overflow = 'hidden';
+                  }
+                  function closeModal(){
+                    modal.classList.remove('open');
+                    modal.setAttribute('aria-hidden','true');
+                    modalImg.src = '';
+                    document.body.style.overflow = '';
+                  }
+                  // bind to all images marked data-enlargeable
+                  document.querySelectorAll('img[data-enlargeable]') .forEach(function(img){
+                    img.style.cursor = img.style.cursor || 'zoom-in';
+                    img.addEventListener('click', function(){ openModal(img.src, img.alt || 'image'); });
+                  });
+                  // close on overlay click or ESC
+                  modal.addEventListener('click', function(e){ if(e.target === modal || e.target === modalImg) closeModal(); });
+                  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeModal(); });
                 })();
               </script>
           </div>

@@ -11,6 +11,7 @@ public class RecipeIngredientDao {
     dto.setId(rs.getString("id"));
     dto.setRecipeId(rs.getString("recipe_id"));
     dto.setIngredient(rs.getString("ingredient"));
+    dto.setAmount(rs.getString("amount"));
     dto.setCreated(rs.getTimestamp("created").toLocalDateTime());
     dto.setUpdated(rs.getTimestamp("updated").toLocalDateTime());
     return dto;
@@ -47,12 +48,14 @@ public class RecipeIngredientDao {
   public void updateRecipeIngredient(RecipeIngredientDto dto)
       throws SQLException, ClassNotFoundException {
     Connection con = DatabaseUtil.getConnection();
+    // ensure amount is also updated when editing an ingredient
     PreparedStatement ps =
         con.prepareStatement(
-            "UPDATE recipe_ingredient SET recipe_id = ?, ingredient = ?, updated = CURRENT_TIMESTAMP WHERE id = ?");
+            "UPDATE recipe_ingredient SET recipe_id = ?, ingredient = ?, amount = ?, updated = CURRENT_TIMESTAMP WHERE id = ?");
     ps.setString(1, dto.getRecipeId());
     ps.setString(2, dto.getIngredient());
-    ps.setString(3, dto.getId());
+    ps.setString(3, dto.getAmount());
+    ps.setString(4, dto.getId());
     ps.executeUpdate();
     DatabaseUtil.close(con, ps);
   }
@@ -70,8 +73,9 @@ public class RecipeIngredientDao {
       throws SQLException, ClassNotFoundException {
     ArrayList<RecipeIngredientDto> list = new ArrayList<>();
     Connection con = DatabaseUtil.getConnection();
-    PreparedStatement ps = con.prepareStatement(
-        "SELECT * FROM recipe_ingredient WHERE recipe_id = ? ORDER BY created");
+    PreparedStatement ps =
+        con.prepareStatement(
+            "SELECT * FROM recipe_ingredient WHERE recipe_id = ? ORDER BY created");
     ps.setString(1, recipeId);
     ResultSet rs = ps.executeQuery();
     while (rs.next()) {
